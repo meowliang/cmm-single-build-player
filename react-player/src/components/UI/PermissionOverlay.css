@@ -1,0 +1,67 @@
+.permission-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--white);
+  z-index: 1000;
+  padding: 20px;
+  text-align: center;
+}
+
+.permission-content {
+  max-width: 400px;
+}
+
+.permission-title {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: var(--white);
+}
+
+.permission-message {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  line-height: 1.5;
+  color: var(--gray);
+}
+
+.permission-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.permission-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.allow-btn {
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.allow-btn:hover {
+  background-color: var(--light-blue);
+}
+
+.skip-btn {
+  background-color: transparent;
+  color: var(--gray);
+  border: 1px solid var(--gray);
+}
+
+.skip-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+} 

@@ -1,0 +1,136 @@
+.playlist-container {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  background-color: rgba(24, 47, 72, 0.95);
+  transition: right 0.3s ease;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  box-shadow: -4px 0 30px rgba(0, 0, 0, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.playlist-container.open {
+  right: 0;
+}
+
+.playlist-header {
+  padding: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.playlist-header h3 {
+  margin: 0;
+  color: var(--creme);
+  font-size: 1.5rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--creme);
+  cursor: pointer;
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.playlist-tracks {
+  height: calc(100vh - 90px);
+  overflow-y: auto;
+  padding: 20px 0;
+}
+
+.playlist-track {
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.playlist-track:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-left-color: var(--creme);
+}
+
+.playlist-track.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left-color: var(--creme);
+}
+
+.track-info p {
+  margin: 0;
+  color: var(--creme);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.xr-badge {
+  background-color: var(--creme);
+  color: var(--blue);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Scrollbar styles */
+.playlist-tracks::-webkit-scrollbar {
+  width: 6px;
+}
+
+.playlist-tracks::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.playlist-tracks::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.playlist-tracks::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 768px) {
+  .playlist-container {
+    width: 100%;
+    right: -100%;
+  }
+
+  .playlist-header {
+    padding: 20px;
+  }
+
+  .playlist-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .playlist-track {
+    padding: 15px 20px;
+  }
+
+  .track-info p {
+    font-size: 0.9rem;
+  }
+}
