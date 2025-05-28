@@ -35,7 +35,7 @@ const PlaylistMenu = ({
                   {track.chapter}. {track.title}
                   {track.IsAR && track.XR_Scene && (
                     <span className="ar-icon" title="360° View Available">
-                      <i className="fas fa-360-degrees"></i>
+                      360°
                     </span>
                   )}
                 </span>
