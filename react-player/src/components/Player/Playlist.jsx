@@ -1,18 +1,18 @@
 import React, { forwardRef } from 'react';
 import './Playlist.css';
 
-const Playlist = forwardRef(({ tracks, currentTrack, onTrackSelect }, ref) => {
+const Playlist = forwardRef(({ playlist, currentTrack, onTrackSelect }, ref) => {
   return (
     <div className="playlist-container" ref={ref}>
       <div className="playlist-header">
-        <h3>Playlist</h3>
+        <h3>{playlist?.playlist_name || 'Playlist'}</h3>
         <button className="close-btn">
           <i className="fas fa-times"></i>
         </button>
       </div>
       
       <div className="playlist-tracks">
-        {tracks?.map((track, index) => (
+        {playlist?.tracks?.map((track, index) => (
           <div
             key={index}
             className={`playlist-track ${index === currentTrack ? 'active' : ''}`}

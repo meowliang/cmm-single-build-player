@@ -60,6 +60,8 @@
 .track-info {
   text-align: center;
   color: white;
+  display: flex;
+  flex-direction: column;
 }
 
 .playlist-name {

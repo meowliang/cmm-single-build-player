@@ -1,53 +1,30 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import './PlaylistMenu.css';
 
 const PlaylistMenu = ({ 
-  playlists, 
+  playlist, 
   currentTrack, 
-  currentPlaylist,
   onTrackSelect,
-  onPlaylistSelect,
-  isVisible 
+  isVisible,
+  onClose
 }) => {
-  useEffect(() => {
-    console.log('PlaylistMenu props:', {
-      playlists,
-      currentTrack,
-      currentPlaylist,
-      isVisible
-    });
-  }, [playlists, currentTrack, currentPlaylist, isVisible]);
-
-  if (!playlists || playlists.length === 0) {
-    console.warn('No playlists available');
+  if (!playlist || !playlist.tracks) {
+    console.warn('No playlist data available');
     return null;
   }
-
-  const currentPlaylistData = playlists[currentPlaylist];
-  if (!currentPlaylistData || !currentPlaylistData.tracks) {
-    console.warn('No tracks available in current playlist');
-    return null;
-  }
-
-  console.log('Current playlist data:', currentPlaylistData);
 
   return (
-    <div className={`playlist-menu ${!isVisible ? 'hidden' : ''}`}>
+    <div className={`playlist-menu ${isVisible ? 'visible' : ''}`}>
       <div className="playlist-menu-content">
-        <div className="playlist-selector">
-          {playlists.map((playlist, index) => (
-            <button
-              key={playlist.playlist_name}
-              className={`playlist-tab ${index === currentPlaylist ? 'active' : ''}`}
-              onClick={() => onPlaylistSelect(index)}
-            >
-              {playlist.playlist_name}
-            </button>
-          ))}
+        <div className="playlist-header">
+          <h3>{playlist.playlist_name}</h3>
+          <button className="close-btn" onClick={onClose}>
+            <i className="fas fa-times"></i>
+          </button>
         </div>
 
         <div className="tracks-list">
-          {currentPlaylistData.tracks.map((track, index) => (
+          {playlist.tracks.map((track, index) => (
             <button
               key={`${track.chapter}-${track.title}`}
               className={`track-item ${index === currentTrack ? 'active' : ''}`}
@@ -56,7 +33,7 @@ const PlaylistMenu = ({
               <div className="track-info">
                 <span className="track-title">
                   {track.chapter}. {track.title}
-                  {track.IsAR && (
+                  {track.IsAR && track.XR_Scene && (
                     <span className="ar-icon" title="360° View Available">
                       <i className="fas fa-360-degrees"></i>
                     </span>
