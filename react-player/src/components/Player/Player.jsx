@@ -70,26 +70,44 @@ const Player = () => {
   useEffect(() => {
     const handleIframeMessage = (event) => {
       if (event.data.type === 'aframeReady') {
+        console.log('A-Frame ready, syncing with audio time');
         setState(prev => ({ ...prev, iframeReady: true }));
+        
+        // Send any pending messages
         state.pendingMessages.forEach(msg => postMessageToIframe(msg));
         setState(prev => ({ ...prev, pendingMessages: [] }));
-      } else if (event.data.type === 'videoReady') {
-        postMessageToIframe({
-          action: 'setTime',
-          time: audioRef.current?.currentTime || 0
-        });
-        if (state.isPlaying) {
+
+        // Sync with current audio time
+        if (audioRef.current) {
           postMessageToIframe({
-            action: 'play',
-            time: audioRef.current?.currentTime || 0
+            action: 'setTime',
+            time: audioRef.current.currentTime
           });
         }
+      } else if (event.data.type === 'videoReady') {
+        console.log('Video ready, syncing with audio time');
+        if (audioRef.current) {
+          postMessageToIframe({
+            action: 'setTime',
+            time: audioRef.current.currentTime
+          });
+          if (state.isPlaying) {
+            postMessageToIframe({
+              action: 'play',
+              time: audioRef.current.currentTime
+            });
+          }
+        }
       } else if (event.data.type === 'currentTime') {
+        console.log('Received video time:', event.data.time);
         if (state.exitingXR) {
           completeExitXRMode(event.data.time);
         }
       } else if (event.data.type === 'videoEnded') {
-        audioRef.current.currentTime = 0;
+        console.log('Video ended, resetting audio');
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+        }
         playNextTrack();
       }
     };
@@ -160,13 +178,18 @@ const Player = () => {
 
     console.log('Setting current track:', track);
     
-    setState(prev => ({ ...prev, currentTrack: index }));
+    // Update state with new track and set playing to true
+    setState(prev => ({ 
+      ...prev, 
+      currentTrack: index,
+      isPlaying: true 
+    }));
+
     if (audioRef.current) {
       audioRef.current.src = track.audio_url;
       audioRef.current.load();
-      if (state.isPlaying) {
-        audioRef.current.play().catch(e => console.error('Error playing track:', e));
-      }
+      // Autoplay the new track
+      audioRef.current.play().catch(e => console.error('Error playing track:', e));
     }
   };
 
@@ -227,23 +250,27 @@ const Player = () => {
     const currentTrack = state.playlist.tracks[state.currentTrack];
     if (!currentTrack.IsAR || !currentTrack.XR_Scene) return;
 
+    // Get current audio time before entering XR mode
+    const currentTime = audioRef.current?.currentTime || 0;
+    console.log('Entering XR mode at time:', currentTime);
+
     setState(prev => ({
       ...prev,
       isXRMode: true,
       exitingXR: false
     }));
 
-    // Setup XR scene
-    setupXRScene(currentTrack.XR_Scene);
+    // Setup XR scene with current time
+    setupXRScene(currentTrack.XR_Scene, currentTime);
   };
 
   const exitXRMode = () => {
     if (!state.isXRMode) return;
 
-    // First pause the video
+    console.log('Exiting XR mode');
+    
+    // First pause the video and get its current time
     postMessageToIframe({ action: 'pause' });
-
-    // Get the current time from the video
     postMessageToIframe({ action: 'getCurrentTime' });
 
     setState(prev => ({
@@ -252,9 +279,10 @@ const Player = () => {
       exitingXR: true
     }));
 
-    // Fallback timeout
+    // Fallback timeout in case we don't get the time response
     setTimeout(() => {
       if (state.exitingXR) {
+        console.log('Fallback: completing XR exit');
         completeExitXRMode(0);
       }
     }, 1000);
@@ -293,8 +321,8 @@ const Player = () => {
     }
   };
 
-  const setupXRScene = (videoUrl) => {
-    console.log('Setting up XR scene with video URL:', videoUrl);
+  const setupXRScene = (videoUrl, startTime = 0) => {
+    console.log('Setting up XR scene with video URL:', videoUrl, 'start time:', startTime);
     
     // Create or get the XR content container
     let xrContent = document.getElementById('xrContent');
@@ -369,10 +397,8 @@ const Player = () => {
             video.addEventListener('loadedmetadata', function() {
               console.log('Video metadata loaded');
               notifyReady();
-              // Sync with audio time when starting
-              if (window.parent.audioRef && window.parent.audioRef.current) {
-                syncVideo(window.parent.audioRef.current.currentTime);
-              }
+              // Set initial time
+              syncVideo(${startTime});
               video.play().catch(e => console.error('Video play error:', e));
             });
 
@@ -419,6 +445,7 @@ const Player = () => {
             if (video.readyState > 3) {
               console.log('Video already loaded');
               notifyReady();
+              syncVideo(${startTime});
             }
           </script>
         </a-scene>
