@@ -28,6 +28,21 @@
   justify-content: flex-end;
 }
 
+.player-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  padding: 20px;
+  pointer-events: none;
+}
+
+.player-overlay > * {
+  pointer-events: auto;
+}
+
 .controls-container {
   position: relative;
   width: 100%;
@@ -77,10 +92,13 @@
 }
 
 .xr-content {
-  position: relative;
-  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
   height: 100vh;
-  background-color: #000;
+  background: #000;
+  z-index: 1000;
 }
 
 .video-frame {
@@ -152,4 +170,9 @@
   .track-info p {
     font-size: 1rem;
   }
+}
+
+/* Update PlaylistMenu z-index in PlaylistMenu.css */
+.playlist-menu {
+  z-index: 2000;
 }

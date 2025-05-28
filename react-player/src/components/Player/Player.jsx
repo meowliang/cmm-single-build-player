@@ -36,21 +36,35 @@ const Player = () => {
 
   // Initialize player with playlist data
   useEffect(() => {
-    try {
-      if (playlistData && playlistData.playlists && playlistData.playlists.length > 0) {
-        setState(prev => ({
-          ...prev,
-          playlist: playlistData.playlists[0],
-          currentPlaylist: 0
-        }));
-        setupAudioElement();
-      } else {
-        console.error('No playlist data available');
-      }
-    } catch (error) {
-      console.error('Error loading playlist data:', error);
+    if (playlistData && playlistData.playlists && playlistData.playlists.length > 0) {
+      const firstPlaylist = playlistData.playlists[0];
+      console.log('Loading playlist:', firstPlaylist);
+      
+      // Set up the audio element first
+      setupAudioElement();
+      
+      // Update state with playlist
+      setState(prev => ({
+        ...prev,
+        playlist: firstPlaylist,
+        currentPlaylist: 0,
+        currentTrack: 0
+      }));
+    } else {
+      console.error('No playlist data available');
     }
   }, []);
+
+  // Handle track initialization after playlist is loaded
+  useEffect(() => {
+    if (state.playlist?.tracks && state.playlist.tracks.length > 0 && audioRef.current) {
+      const firstTrack = state.playlist.tracks[0];
+      console.log('Setting first track:', firstTrack);
+      
+      audioRef.current.src = firstTrack.audio_url;
+      audioRef.current.load();
+    }
+  }, [state.playlist]);
 
   // Handle iframe messages
   useEffect(() => {
@@ -90,6 +104,9 @@ const Player = () => {
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
       audioRef.current.addEventListener('ended', handleTrackEnd);
+      audioRef.current.addEventListener('error', (e) => {
+        console.error('Audio error:', e);
+      });
     }
   };
 
@@ -105,6 +122,10 @@ const Player = () => {
 
   const handleLoadedMetadata = () => {
     if (audioRef.current) {
+      console.log('Audio metadata loaded:', {
+        duration: audioRef.current.duration,
+        currentTime: audioRef.current.currentTime
+      });
       setState(prev => ({
         ...prev,
         duration: audioRef.current.duration
@@ -113,6 +134,11 @@ const Player = () => {
   };
 
   const handleTrackEnd = () => {
+    if (!state.playlist?.tracks) {
+      console.error('No playlist tracks available');
+      return;
+    }
+
     if (state.currentTrack < state.playlist.tracks.length - 1) {
       setCurrentTrack(state.currentTrack + 1);
     } else {
@@ -121,37 +147,69 @@ const Player = () => {
   };
 
   const setCurrentTrack = (index) => {
+    if (!state.playlist?.tracks) {
+      console.error('No playlist tracks available');
+      return;
+    }
+
+    const track = state.playlist.tracks[index];
+    if (!track) {
+      console.error('Invalid track index:', index);
+      return;
+    }
+
+    console.log('Setting current track:', track);
+    
     setState(prev => ({ ...prev, currentTrack: index }));
     if (audioRef.current) {
-      audioRef.current.src = state.playlist.tracks[index].audio_url;
+      audioRef.current.src = track.audio_url;
       audioRef.current.load();
       if (state.isPlaying) {
-        audioRef.current.play();
+        audioRef.current.play().catch(e => console.error('Error playing track:', e));
       }
     }
   };
 
   const playNextTrack = () => {
+    if (!state.playlist?.tracks) {
+      console.error('No playlist tracks available');
+      return;
+    }
+
     if (state.currentTrack < state.playlist.tracks.length - 1) {
       setCurrentTrack(state.currentTrack + 1);
     }
   };
 
   const playPreviousTrack = () => {
+    if (!state.playlist?.tracks) {
+      console.error('No playlist tracks available');
+      return;
+    }
+
     if (state.currentTrack > 0) {
       setCurrentTrack(state.currentTrack - 1);
     }
   };
 
   const togglePlay = () => {
-    if (audioRef.current) {
-      if (state.isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
+    if (!audioRef.current || !state.playlist?.tracks) {
+      console.error('Audio not initialized or no tracks available');
+      return;
     }
+
+    if (state.isPlaying) {
+      audioRef.current.pause();
+    } else {
+      // Ensure we're at the right track before playing
+      const currentTrack = state.playlist.tracks[state.currentTrack];
+      if (audioRef.current.src !== currentTrack.audio_url) {
+        audioRef.current.src = currentTrack.audio_url;
+        audioRef.current.load();
+      }
+      audioRef.current.play().catch(e => console.error('Error playing audio:', e));
+    }
+    setState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
   };
 
   const toggleXR = () => {
@@ -182,13 +240,17 @@ const Player = () => {
   const exitXRMode = () => {
     if (!state.isXRMode) return;
 
+    // First pause the video
+    postMessageToIframe({ action: 'pause' });
+
+    // Get the current time from the video
+    postMessageToIframe({ action: 'getCurrentTime' });
+
     setState(prev => ({
       ...prev,
       isXRMode: false,
       exitingXR: true
     }));
-
-    postMessageToIframe({ action: 'getCurrentTime' });
 
     // Fallback timeout
     setTimeout(() => {
@@ -199,23 +261,50 @@ const Player = () => {
   };
 
   const completeExitXRMode = (videoTime) => {
+    console.log('Completing XR exit, syncing time:', videoTime);
+    
+    if (audioRef.current) {
+      // Ensure we're on the correct track
+      const currentTrack = state.playlist.tracks[state.currentTrack];
+      if (audioRef.current.src !== currentTrack.audio_url) {
+        audioRef.current.src = currentTrack.audio_url;
+        audioRef.current.load();
+      }
+
+      // Set the audio time to match the video time
+      audioRef.current.currentTime = videoTime;
+      
+      // Resume audio playback if it was playing
+      if (state.isPlaying) {
+        audioRef.current.play().catch(e => console.error('Error resuming audio:', e));
+      }
+    }
+
     setState(prev => ({
       ...prev,
       exitingXR: false,
       isXRMode: false
     }));
 
-    if (audioRef.current) {
-      const atEnd = videoTime >= (audioRef.current.duration - 0.5);
-      audioRef.current.currentTime = atEnd ? 0 : videoTime;
-      
-      if (!atEnd && state.isPlaying) {
-        audioRef.current.play();
-      }
+    // Remove XR content container
+    const xrContent = document.getElementById('xrContent');
+    if (xrContent) {
+      xrContent.remove();
     }
   };
 
   const setupXRScene = (videoUrl) => {
+    console.log('Setting up XR scene with video URL:', videoUrl);
+    
+    // Create or get the XR content container
+    let xrContent = document.getElementById('xrContent');
+    if (!xrContent) {
+      xrContent = document.createElement('div');
+      xrContent.id = 'xrContent';
+      xrContent.className = 'xr-content';
+      document.body.appendChild(xrContent);
+    }
+
     const iframe = document.createElement('iframe');
     iframe.className = 'video-frame';
     iframe.allowFullscreen = true;
@@ -263,23 +352,40 @@ const Player = () => {
 
           <script>
             const video = document.getElementById('xrVideo');
-            video.muted = true;
-
+            console.log('Video element created:', video);
+            
             function syncVideo(time) {
               if (Math.abs(video.currentTime - time) > 0.1) {
+                console.log('Syncing video time:', time);
                 video.currentTime = time;
               }
             }
 
             function notifyReady() {
+              console.log('Notifying parent that A-Frame is ready');
               window.parent.postMessage({ type: 'aframeReady' }, '*');
             }
 
             video.addEventListener('loadedmetadata', function() {
+              console.log('Video metadata loaded');
               notifyReady();
+              // Sync with audio time when starting
+              if (window.parent.audioRef && window.parent.audioRef.current) {
+                syncVideo(window.parent.audioRef.current.currentTime);
+              }
+              video.play().catch(e => console.error('Video play error:', e));
+            });
+
+            video.addEventListener('error', function(e) {
+              console.error('Video error:', e);
+              window.parent.postMessage({ 
+                type: 'videoError',
+                error: e.target.error
+              }, '*');
             });
 
             video.addEventListener('ended', () => {
+              console.log('Video ended');
               window.parent.postMessage({ type: 'videoEnded' }, '*');
             });
             
@@ -288,16 +394,20 @@ const Player = () => {
               
               switch(event.data.action) {
                 case 'play':
+                  console.log('Play command received');
                   syncVideo(event.data.time || 0);
-                  video.play().catch(e => console.log('Video play error:', e));
+                  video.play().catch(e => console.error('Video play error:', e));
                   break;
                 case 'pause':
+                  console.log('Pause command received');
                   video.pause();
                   break;
                 case 'setTime':
+                  console.log('Set time command received:', event.data.time);
                   syncVideo(event.data.time);
                   break;
                 case 'getCurrentTime':
+                  console.log('Sending current time:', video.currentTime);
                   window.parent.postMessage({
                     type: 'currentTime',
                     time: video.currentTime
@@ -307,6 +417,7 @@ const Player = () => {
             });
 
             if (video.readyState > 3) {
+              console.log('Video already loaded');
               notifyReady();
             }
           </script>
@@ -315,12 +426,18 @@ const Player = () => {
       </html>
     `;
 
-    const xrContent = document.getElementById('xrContent');
-    if (xrContent) {
-      xrContent.innerHTML = '';
-      xrContent.appendChild(iframe);
-      iframeRef.current = iframe;
-    }
+    xrContent.innerHTML = '';
+    xrContent.appendChild(iframe);
+    iframeRef.current = iframe;
+    
+    // Add error handling for iframe loading
+    iframe.onload = () => {
+      console.log('XR iframe loaded');
+    };
+    
+    iframe.onerror = (error) => {
+      console.error('XR iframe error:', error);
+    };
   };
 
   const postMessageToIframe = (message) => {
@@ -359,14 +476,16 @@ const Player = () => {
           </div>
         )}
         
-        <PlayerControls
-          state={state}
-          onPlayPause={togglePlay}
-          onNext={playNextTrack}
-          onPrevious={playPreviousTrack}
-          onToggleXR={toggleXR}
-          onTogglePlaylist={() => setIsPlaylistVisible(!isPlaylistVisible)}
-        />
+        <div className="player-overlay">
+          <PlayerControls
+            state={state}
+            onPlayPause={togglePlay}
+            onNext={playNextTrack}
+            onPrevious={playPreviousTrack}
+            onToggleXR={toggleXR}
+            onTogglePlaylist={() => setIsPlaylistVisible(!isPlaylistVisible)}
+          />
+        </div>
       </div>
 
       <PlaylistMenu

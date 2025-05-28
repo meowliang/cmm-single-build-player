@@ -6,7 +6,7 @@
   height: 100vh;
   background-color: rgba(24, 47, 72, 0.95);
   transition: left 0.3s ease;
-  z-index: 1000;
+  z-index: 2000;
   backdrop-filter: blur(10px);
   box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
   border-right: 1px solid rgba(255, 255, 255, 0.1);
