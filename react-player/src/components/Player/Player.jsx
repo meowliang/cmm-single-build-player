@@ -10,12 +10,17 @@ import playlistData from '../../data/playlist.json';
 const Player = () => {
   // State management
   const [state, setState] = useState({
-    currentTrack: 0,
     isPlaying: false,
+    currentTrack: 0,
     isXRMode: false,
     exitingXR: false,
     pendingMessages: [],
     iframeReady: false,
+    hasOrientationPermission: false,
+    orientationPermissionRequested: false,
+    playbackSpeed: 1,
+    currentPlaylist: 0,
+    playlist: null,
     volume: 1,
     isMuted: false,
     videoElement: null,
@@ -23,10 +28,7 @@ const Player = () => {
     showPermissionOverlay: false,
     currentTime: 0,
     duration: 0,
-    progress: 0,
-    playbackSpeed: 1,
-    currentPlaylist: 0,
-    playlist: null
+    progress: 0
   });
 
   const [isPlaylistVisible, setIsPlaylistVisible] = useState(false);
@@ -246,9 +248,44 @@ const Player = () => {
     }
   };
 
-  const enterXRMode = () => {
+  const requestOrientationPermission = async () => {
+    if (typeof DeviceOrientationEvent !== 'undefined' && 
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const permission = await DeviceOrientationEvent.requestPermission();
+        setState(prev => ({
+          ...prev,
+          hasOrientationPermission: permission === 'granted',
+          orientationPermissionRequested: true
+        }));
+        return permission === 'granted';
+      } catch (error) {
+        console.error('Error requesting device orientation permission:', error);
+        return false;
+      }
+    }
+    // If the API is not available, assume permission is granted
+    setState(prev => ({
+      ...prev,
+      hasOrientationPermission: true,
+      orientationPermissionRequested: true
+    }));
+    return true;
+  };
+
+  const enterXRMode = async () => {
     const currentTrack = state.playlist.tracks[state.currentTrack];
     if (!currentTrack.IsAR || !currentTrack.XR_Scene) return;
+
+    // Request orientation permission if not already granted
+    if (!state.hasOrientationPermission && !state.orientationPermissionRequested) {
+      const granted = await requestOrientationPermission();
+      if (!granted) {
+        // Show a message to the user about enabling orientation
+        alert('Please enable device orientation access to experience the 360° view. You can enable this in your device settings.');
+        return;
+      }
+    }
 
     // Get current audio time before entering XR mode
     const currentTime = audioRef.current?.currentTime || 0;
@@ -348,10 +385,26 @@ const Player = () => {
           body { margin: 0; overflow: hidden; }
           .a-canvas { background: #000 !important; }
           .a-loader-title, .a-enter-vr-button, .a-loader { display: none !important; }
+          .orientation-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 9999;
+            display: none;
+          }
         </style>
       </head>
       <body>
-        <a-scene device-orientation-permission-ui
+        <div id="orientationMessage" class="orientation-message">
+          Please enable device orientation access to experience the 360° view
+        </div>
+        <a-scene device-orientation-permission-ui="enabled: true"
                  loading-screen="enabled: false"
                  vr-mode-ui="enabled: false">
           <a-assets>
@@ -380,7 +433,40 @@ const Player = () => {
 
           <script>
             const video = document.getElementById('xrVideo');
+            const orientationMessage = document.getElementById('orientationMessage');
             console.log('Video element created:', video);
+            
+            // Check device orientation support
+            function checkOrientationSupport() {
+              if (typeof DeviceOrientationEvent === 'undefined') {
+                console.log('Device orientation not supported');
+                return false;
+              }
+              return true;
+            }
+
+            // Handle orientation permission
+            function handleOrientationPermission() {
+              if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                  .then(permission => {
+                    if (permission === 'granted') {
+                      orientationMessage.style.display = 'none';
+                    } else {
+                      orientationMessage.style.display = 'block';
+                    }
+                  })
+                  .catch(console.error);
+              } else {
+                // If the API is not available, assume permission is granted
+                orientationMessage.style.display = 'none';
+              }
+            }
+
+            // Check orientation support and request permission
+            if (checkOrientationSupport()) {
+              handleOrientationPermission();
+            }
             
             function syncVideo(time) {
               if (Math.abs(video.currentTime - time) > 0.1) {
