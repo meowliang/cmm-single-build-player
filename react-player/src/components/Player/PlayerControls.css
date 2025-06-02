@@ -1,15 +1,21 @@
 .player-controls {
-  position: relative;
-  width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
+  position: fixed;
+  bottom: 0;
+  width: 90vw;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 1rem;
   display: flex;
-  flex-direction: column;
-  gap: 15px;
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 100;
+  border-radius: 20px;
+  margin: 0 auto;
+  margin-bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .xr-mode-btn {
@@ -85,17 +91,16 @@
   flex-direction: row;
   align-items: center;
   gap: 20px;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 .progress-container {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 10px;
   color: var(--creme);
   padding: 0 20px;
+  min-width: 200px;
 }
 
 .progress-bar {
@@ -105,6 +110,11 @@
   border-radius: 2px;
   cursor: pointer;
   position: relative;
+  transition: height 0.2s ease;
+}
+
+.progress-bar:hover {
+  height: 6px;
 }
 
 .progress {
@@ -202,9 +212,7 @@
     font-size: 0.7rem;
   }
 
-  .progress-container,
-  .volume-controls,
-  .additional-controls {
+  .progress-container {
     padding: 0 10px;
   }
 

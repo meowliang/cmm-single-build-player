@@ -99,18 +99,18 @@ const Player = () => {
               time: audioRef.current.currentTime
             });
           }
+        } else if (event.data.type === 'currentTime') {
+          console.log('Received video time:', event.data.time);
+          if (state.exitingXR) {
+            completeExitXRMode(event.data.time);
+          }
+        } else if (event.data.type === 'videoEnded') {
+          console.log('Video ended, resetting audio');
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+          }
+          playNextTrack();
         }
-      } else if (event.data.type === 'currentTime') {
-        console.log('Received video time:', event.data.time);
-        if (state.exitingXR) {
-          completeExitXRMode(event.data.time);
-        }
-      } else if (event.data.type === 'videoEnded') {
-        console.log('Video ended, resetting audio');
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-        }
-        playNextTrack();
       }
     };
 
@@ -223,18 +223,37 @@ const Player = () => {
       return;
     }
 
-    if (state.isPlaying) {
-      audioRef.current.pause();
-    } else {
+    const newIsPlaying = !state.isPlaying;
+    const currentTrack = state.playlist.tracks[state.currentTrack];
+    
+    if (newIsPlaying) {
       // Ensure we're at the right track before playing
-      const currentTrack = state.playlist.tracks[state.currentTrack];
       if (audioRef.current.src !== currentTrack.audio_url) {
         audioRef.current.src = currentTrack.audio_url;
         audioRef.current.load();
       }
+      
+      // Play audio
       audioRef.current.play().catch(e => console.error('Error playing audio:', e));
+      
+      // Sync video if in XR mode
+      if (state.isXRMode) {
+        postMessageToIframe({
+          action: 'play',
+          time: audioRef.current.currentTime
+        });
+      }
+    } else {
+      // Pause audio
+      audioRef.current.pause();
+      
+      // Pause video if in XR mode
+      if (state.isXRMode) {
+        postMessageToIframe({ action: 'pause' });
+      }
     }
-    setState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
+    
+    setState(prev => ({ ...prev, isPlaying: newIsPlaying }));
   };
 
   const toggleXR = () => {
@@ -564,6 +583,33 @@ const Player = () => {
     }
   };
 
+  const handleSeek = (event) => {
+    if (!audioRef.current || !state.playlist?.tracks) return;
+
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const clickPosition = (event.clientX - rect.left) / rect.width;
+    const newTime = clickPosition * audioRef.current.duration;
+
+    // Update audio position
+    audioRef.current.currentTime = newTime;
+
+    // If in XR mode, sync video position
+    if (state.isXRMode) {
+      postMessageToIframe({
+        action: 'setTime',
+        time: newTime
+      });
+    }
+
+    // Update state
+    setState(prev => ({
+      ...prev,
+      currentTime: newTime,
+      progress: clickPosition * 100
+    }));
+  };
+
   const currentTrack = state.playlist?.tracks[state.currentTrack];
 
   return (
@@ -597,6 +643,7 @@ const Player = () => {
             onPrevious={playPreviousTrack}
             onToggleXR={toggleXR}
             onTogglePlaylist={() => setIsPlaylistVisible(!isPlaylistVisible)}
+            onSeek={handleSeek}
           />
         </div>
       </div>

@@ -20,6 +20,16 @@ const PlayerControls = ({
   const isMuted = state.isMuted;
   const showXRButton = currentTrack?.IsAR === true;
 
+  const formatTime = (seconds) => {
+    if (typeof seconds === 'string') {
+      if (seconds.match(/^\d+:\d{2}$/)) return seconds;
+      seconds = parseFloat(seconds);
+    }
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
   return (
     <>
       {showXRButton && (
@@ -121,17 +131,6 @@ const PlayerControls = ({
       </div>
     </>
   );
-};
-
-// Helper function to format time
-const formatTime = (seconds) => {
-  if (typeof seconds === 'string') {
-    if (seconds.match(/^\d+:\d{2}$/)) return seconds;
-    seconds = parseFloat(seconds);
-  }
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 };
 
 export default PlayerControls; 
