@@ -52,11 +52,15 @@
 }
 
 .audio-content {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   padding: 40px;
   flex: 1;
+}
+
+.audio-content.active {
+  display: flex;
 }
 
 .artwork-container {
@@ -101,6 +105,11 @@
   height: 100vh;
   background: #000;
   z-index: 1000;
+  display: none;
+}
+
+.xr-content.active {
+  display: block;
 }
 
 .video-frame {
