@@ -3,10 +3,10 @@ import './PermissionOverlay.css';
 
 const PermissionOverlay = ({ onEnableMotion, onSkip }) => {
   return (
-    <div className="overlay" id="permissionOverlay">
-      <div className="overlay-content">
+    <div className="permission-overlay">
+      <div className="permission-content">
         <div className="icon-container">
-          <i className="icon fas fa-vr-cardboard"></i>
+          <i className="fas fa-vr-cardboard"></i>
         </div>
 
         <h2>Immersive 360° Experience</h2>
@@ -36,19 +36,18 @@ const PermissionOverlay = ({ onEnableMotion, onSkip }) => {
           </ul>
         </div>
 
-        <div className="overlay-btns">
+        <div className="permission-buttons">
           <button 
-            id="enableMotionBtn" 
-            className="overlay-btn"
+            className="primary-button"
             onClick={onEnableMotion}
           >
             <strong>Start Experience</strong>
           </button>
           <button 
-            id="skipMotionBtn"
+            className="secondary-button"
             onClick={onSkip}
           >
-            <p>Exit</p>
+            Skip
           </button>
         </div>
       </div>

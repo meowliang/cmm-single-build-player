@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PlayerControls from './PlayerControls';
 import PlaylistMenu from './PlaylistMenu';
+import PermissionOverlay from '../UI/PermissionOverlay';
+import { useDeviceOrientation } from '../../hooks/useDeviceOrientation';
 import './Player.css';
 
 // Import playlist data
@@ -35,6 +37,13 @@ const Player = () => {
   const audioRef = useRef(null);
   const playerRef = useRef(null);
   const iframeRef = useRef(null);
+
+  const { 
+    hasPermission, 
+    showPermissionOverlay, 
+    requestPermission, 
+    skipPermission 
+  } = useDeviceOrientation();
 
   // Initialize player with playlist data
   useEffect(() => {
@@ -365,36 +374,20 @@ const Player = () => {
     }
   };
 
-  const requestOrientationPermission = async () => {
-    if (typeof DeviceOrientationEvent !== 'undefined' && 
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-      try {
-        const permission = await DeviceOrientationEvent.requestPermission();
-        setState(prev => ({
-          ...prev,
-          hasOrientationPermission: permission === 'granted',
-          orientationPermissionRequested: true
-        }));
-        return permission === 'granted';
-      } catch (error) {
-        console.error('Error requesting device orientation permission:', error);
-        return false;
-      }
-    }
-    // If the API is not available, assume permission is granted
-    setState(prev => ({
-      ...prev,
-      hasOrientationPermission: true,
-      orientationPermissionRequested: true
-    }));
-    return true;
-  };
-
   const enterXRMode = async () => {
     const currentTrack = state.playlist.tracks[state.currentTrack];
     if (!currentTrack.IsAR || !currentTrack.XR_Scene) {
       console.warn("No XR content available");
       return;
+    }
+
+    // Check for device orientation permission on iOS
+    if (!hasPermission) {
+      const granted = await requestPermission();
+      if (!granted) {
+        console.warn("Device orientation permission not granted");
+        return;
+      }
     }
 
     // Show loading state
@@ -728,6 +721,12 @@ const Player = () => {
 
   return (
     <div className="player-container" ref={playerRef}>
+      {showPermissionOverlay && (
+        <PermissionOverlay
+          onEnableMotion={requestPermission}
+          onSkip={skipPermission}
+        />
+      )}
       <div className="player-content">
         <div id="xrContent" className={`xr-content ${state.isXRMode ? 'active' : ''}`}>
           {/* XR iframe will be inserted here */}
