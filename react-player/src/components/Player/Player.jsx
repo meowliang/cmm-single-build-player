@@ -42,7 +42,8 @@ const Player = () => {
     hasPermission, 
     showPermissionOverlay, 
     requestPermission, 
-    skipPermission 
+    skipPermission,
+    error 
   } = useDeviceOrientation();
 
   // Initialize player with playlist data
@@ -439,19 +440,13 @@ const Player = () => {
         }
       });
     } catch (error) {
-      console.error('Failed to enter XR mode:', error);
-      loadingOverlay.innerHTML = `
-        <div class="xr-loading-message" style="color: white; text-align: center;">
-          Failed to load 360° content<br>
-          <button onclick="window.location.reload()" 
-                  style="margin-top:20px;padding:10px 20px;
-                        background:var(--blue);border:none;
-                        border-radius:5px;color:white;">
-            Try Again
-          </button>
-        </div>
-      `;
-      setTimeout(() => completeExitXRMode(audioRef.current?.currentTime || 0), 2000);
+      console.error('Error entering XR mode:', error);
+      document.body.removeChild(loadingOverlay);
+      setState(prev => ({
+        ...prev,
+        isXRMode: false,
+        exitingXR: false
+      }));
     }
   };
 
@@ -725,6 +720,7 @@ const Player = () => {
         <PermissionOverlay
           onEnableMotion={requestPermission}
           onSkip={skipPermission}
+          error={error}
         />
       )}
       <div className="player-content">

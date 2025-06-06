@@ -1,7 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './PermissionOverlay.css';
 
-const PermissionOverlay = ({ onEnableMotion, onSkip }) => {
+const PermissionOverlay = ({ onEnableMotion, onSkip, error }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleEnableMotion = async () => {
+    setIsLoading(true);
+    try {
+      await onEnableMotion();
+    } catch (err) {
+      console.error('Error enabling motion:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="permission-overlay">
       <div className="permission-content">
@@ -36,16 +49,31 @@ const PermissionOverlay = ({ onEnableMotion, onSkip }) => {
           </ul>
         </div>
 
+        {error && (
+          <div className="permission-error">
+            <p>{error}</p>
+          </div>
+        )}
+
         <div className="permission-buttons">
           <button 
-            className="primary-button"
-            onClick={onEnableMotion}
+            className={`primary-button ${isLoading ? 'loading' : ''}`}
+            onClick={handleEnableMotion}
+            disabled={isLoading}
           >
-            <strong>Start Experience</strong>
+            {isLoading ? (
+              <>
+                <span className="loading-spinner"></span>
+                <span>Requesting Permission...</span>
+              </>
+            ) : (
+              <strong>Start Experience</strong>
+            )}
           </button>
           <button 
             className="secondary-button"
             onClick={onSkip}
+            disabled={isLoading}
           >
             Skip
           </button>

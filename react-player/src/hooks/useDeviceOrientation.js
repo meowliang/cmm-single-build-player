@@ -4,6 +4,7 @@ export const useDeviceOrientation = () => {
   const [hasPermission, setHasPermission] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showPermissionOverlay, setShowPermissionOverlay] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const checkDevice = () => {
@@ -21,29 +22,43 @@ export const useDeviceOrientation = () => {
   }, []);
 
   const requestPermission = useCallback(async () => {
-    if (typeof DeviceOrientationEvent !== 'undefined' && 
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-      try {
+    try {
+      // For iOS Safari
+      if (typeof DeviceOrientationEvent !== 'undefined' && 
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
         const permission = await DeviceOrientationEvent.requestPermission();
-        setHasPermission(permission === 'granted');
+        const isGranted = permission === 'granted';
+        setHasPermission(isGranted);
         
-        if (permission === 'granted') {
+        if (isGranted) {
           localStorage.setItem('hasRequestedMotionPermissions', 'true');
           setShowPermissionOverlay(false);
           
           // Also request motion permission if available
           if (typeof DeviceMotionEvent !== 'undefined' && 
               typeof DeviceMotionEvent.requestPermission === 'function') {
-            DeviceMotionEvent.requestPermission();
+            try {
+              await DeviceMotionEvent.requestPermission();
+            } catch (motionError) {
+              console.warn('Motion permission request failed:', motionError);
+            }
           }
+        } else {
+          setError('Permission denied. Some features may not work properly.');
         }
-        return permission === 'granted';
-      } catch (error) {
-        console.error('Error requesting device orientation permission:', error);
-        return false;
+        return isGranted;
       }
+      
+      // For non-iOS devices
+      setHasPermission(true);
+      localStorage.setItem('hasRequestedMotionPermissions', 'true');
+      setShowPermissionOverlay(false);
+      return true;
+    } catch (error) {
+      console.error('Error requesting device orientation permission:', error);
+      setError('Failed to request device orientation permission. Please try again.');
+      return false;
     }
-    return true; // Non-iOS devices don't need permission
   }, []);
 
   const skipPermission = useCallback(() => {
@@ -56,6 +71,7 @@ export const useDeviceOrientation = () => {
     isIOS,
     showPermissionOverlay,
     requestPermission,
-    skipPermission
+    skipPermission,
+    error
   };
 };
