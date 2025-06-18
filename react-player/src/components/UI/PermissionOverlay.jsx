@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './PermissionOverlay.css';
 
-const PermissionOverlay = ({ onEnableMotion, onSkip, error }) => {
+const PermissionOverlay = ({ onEnableMotion, onSkip, error, isAndroid }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEnableMotion = async () => {
@@ -44,8 +44,17 @@ const PermissionOverlay = ({ onEnableMotion, onSkip, error }) => {
         <div className="permission-steps">
           <p><strong>When prompted:</strong></p>
           <ul>
-            <li>Tap "Allow" to enable motion and orientation access</li>
-            <li>For the best experience, use headphones and move around</li>
+            {isAndroid ? (
+              <>
+                <li>Allow motion and orientation access if prompted</li>
+                <li>For the best experience, use headphones and move around</li>
+              </>
+            ) : (
+              <>
+                <li>Tap "Allow" to enable motion and orientation access</li>
+                <li>For the best experience, use headphones and move around</li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -64,7 +73,7 @@ const PermissionOverlay = ({ onEnableMotion, onSkip, error }) => {
             {isLoading ? (
               <>
                 <span className="loading-spinner"></span>
-                <span>Requesting Permission...</span>
+                <span>Checking Permissions...</span>
               </>
             ) : (
               <strong>Start Experience</strong>

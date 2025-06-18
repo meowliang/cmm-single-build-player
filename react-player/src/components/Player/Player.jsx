@@ -43,7 +43,8 @@ const Player = () => {
     showPermissionOverlay, 
     requestPermission, 
     skipPermission,
-    error 
+    error,
+    isAndroid
   } = useDeviceOrientation();
 
   // Initialize player with playlist data
@@ -721,6 +722,7 @@ const Player = () => {
           onEnableMotion={requestPermission}
           onSkip={skipPermission}
           error={error}
+          isAndroid={isAndroid}
         />
       )}
       <div className="player-content">
