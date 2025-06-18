@@ -13,29 +13,35 @@ export const useDeviceOrientation = () => {
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const isAndroidDevice = /Android/.test(navigator.userAgent);
       
+      console.log('Device detection:', { isIOSDevice, isAndroidDevice, userAgent: navigator.userAgent });
+      
       setIsIOS(isIOSDevice);
       setIsAndroid(isAndroidDevice);
 
       // Check if we need to show the permission overlay
       const hasRequestedBefore = localStorage.getItem('hasRequestedMotionPermissions');
+      console.log('Permission check:', { hasRequestedBefore, isIOSDevice, isAndroidDevice });
       
-      // Show overlay for iOS devices that haven't requested before
-      if (isIOSDevice && !hasRequestedBefore) {
+      // Show overlay for mobile devices that haven't requested before
+      if ((isIOSDevice || isAndroidDevice) && !hasRequestedBefore) {
+        console.log('Showing permission overlay for mobile device');
         setShowPermissionOverlay(true);
       }
-      // For Android and other devices, we don't need to show the overlay
-      // as they typically don't require explicit permission requests
     };
     checkDevice();
   }, []);
 
   const requestPermission = useCallback(async () => {
+    console.log('Requesting permission...', { isIOS, isAndroid });
+    
     try {
       // For iOS Safari - requires explicit permission
       if (isIOS && typeof DeviceOrientationEvent !== 'undefined' && 
           typeof DeviceOrientationEvent.requestPermission === 'function') {
+        console.log('Requesting iOS permission...');
         const permission = await DeviceOrientationEvent.requestPermission();
         const isGranted = permission === 'granted';
+        console.log('iOS permission result:', permission);
         setHasPermission(isGranted);
         
         if (isGranted) {
@@ -60,13 +66,16 @@ export const useDeviceOrientation = () => {
       // For Android and other devices - no explicit permission needed
       // Just check if the device supports orientation events
       if (typeof DeviceOrientationEvent !== 'undefined') {
+        console.log('Android device - DeviceOrientationEvent supported');
         setHasPermission(true);
         localStorage.setItem('hasRequestedMotionPermissions', 'true');
         setShowPermissionOverlay(false);
+        console.log('Permission granted for Android device');
         return true;
       }
       
       // Fallback for devices that don't support orientation events
+      console.log('Device orientation not supported');
       setHasPermission(false);
       localStorage.setItem('hasRequestedMotionPermissions', 'true');
       setShowPermissionOverlay(false);
@@ -80,6 +89,7 @@ export const useDeviceOrientation = () => {
   }, [isIOS]);
 
   const skipPermission = useCallback(() => {
+    console.log('Skipping permission request');
     localStorage.setItem('hasRequestedMotionPermissions', 'true');
     setShowPermissionOverlay(false);
   }, []);

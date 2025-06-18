@@ -5,14 +5,24 @@ const PermissionOverlay = ({ onEnableMotion, onSkip, error, isAndroid }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEnableMotion = async () => {
+    console.log('Start Experience button clicked', { isAndroid });
+    alert('Button clicked!'); // Temporary debug alert
     setIsLoading(true);
     try {
-      await onEnableMotion();
+      console.log('Calling onEnableMotion...');
+      const result = await onEnableMotion();
+      console.log('onEnableMotion result:', result);
     } catch (err) {
       console.error('Error enabling motion:', err);
     } finally {
+      console.log('Setting loading to false');
       setIsLoading(false);
     }
+  };
+
+  const handleSkip = () => {
+    console.log('Skip button clicked');
+    onSkip();
   };
 
   return (
@@ -69,6 +79,7 @@ const PermissionOverlay = ({ onEnableMotion, onSkip, error, isAndroid }) => {
             className={`primary-button ${isLoading ? 'loading' : ''}`}
             onClick={handleEnableMotion}
             disabled={isLoading}
+            style={{ cursor: 'pointer' }}
           >
             {isLoading ? (
               <>
@@ -81,7 +92,7 @@ const PermissionOverlay = ({ onEnableMotion, onSkip, error, isAndroid }) => {
           </button>
           <button 
             className="secondary-button"
-            onClick={onSkip}
+            onClick={handleSkip}
             disabled={isLoading}
           >
             Skip
