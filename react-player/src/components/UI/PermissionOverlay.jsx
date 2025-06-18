@@ -6,7 +6,6 @@ const PermissionOverlay = ({ onEnableMotion, onSkip, error, isAndroid }) => {
 
   const handleEnableMotion = async () => {
     console.log('Start Experience button clicked', { isAndroid });
-    alert('Button clicked!'); // Temporary debug alert
     setIsLoading(true);
     try {
       console.log('Calling onEnableMotion...');
