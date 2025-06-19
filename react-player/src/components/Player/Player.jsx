@@ -4,6 +4,7 @@ import PlayerControls from './PlayerControls';
 import PlaylistMenu from './PlaylistMenu';
 import PermissionOverlay from '../UI/PermissionOverlay';
 import { useDeviceOrientation } from '../../hooks/useDeviceOrientation';
+import useParentPageInfo from '../../hooks/useParentPageInfo';
 import './Player.css';
 
 // Import playlist data
@@ -47,26 +48,33 @@ const Player = () => {
     isAndroid
   } = useDeviceOrientation();
 
+  const pageInfo = useParentPageInfo();
+
   // Initialize player with playlist data
   useEffect(() => {
-    if (playlistData && playlistData.playlists && playlistData.playlists.length > 0) {
-      const firstPlaylist = playlistData.playlists[0];
-      console.log('Loading playlist:', firstPlaylist);
-      
-      // Set up the audio element first
-      setupAudioElement();
-      
-      // Update state with playlist
-      setState(prev => ({
-        ...prev,
-        playlist: firstPlaylist,
-        currentPlaylist: 0,
-        currentTrack: 0
-      }));
-    } else {
-      console.error('No playlist data available');
+    if (!playlistData || !playlistData.playlists || playlistData.playlists.length === 0) return;
+
+    let selectedPlaylist = playlistData.playlists[0]; // Default
+    if (pageInfo && pageInfo.url) {
+      const url = pageInfo.url.toLowerCase();
+      if (url.includes('dtla')) {
+        selectedPlaylist = playlistData.playlists.find(p => p.playlist_name === 'Ni de Aquí, Ni de Allá') || selectedPlaylist;
+      } else if (url.includes('japantown')) {
+        selectedPlaylist = playlistData.playlists.find(p => p.playlist_name === 'Returning to the Harlem of the West') || selectedPlaylist;
+      } else if (url.includes('chinatown')) {
+        selectedPlaylist = playlistData.playlists.find(p => p.playlist_name === 'Look Up') || selectedPlaylist;
+      } else if (url.includes('mission')) {
+        selectedPlaylist = playlistData.playlists.find(p => p.playlist_name === 'Coffee Country') || selectedPlaylist;
+      }
     }
-  }, []);
+    setupAudioElement();
+    setState(prev => ({
+      ...prev,
+      playlist: selectedPlaylist,
+      currentPlaylist: 0,
+      currentTrack: 0
+    }));
+  }, [pageInfo]);
 
   // Handle track initialization after playlist is loaded
   useEffect(() => {
