@@ -52,21 +52,40 @@ const Player = () => {
 
   // Initialize player with playlist data
   useEffect(() => {
-    if (!playlistData || !playlistData.playlists || playlistData.playlists.length === 0) return;
+    console.log('Player: Playlist selection effect triggered');
+    console.log('Player: Current pageInfo:', pageInfo);
+    console.log('Player: Available playlists:', playlistData?.playlists);
+
+    if (!playlistData || !playlistData.playlists || playlistData.playlists.length === 0) {
+      console.warn('Player: No playlist data available');
+      return;
+    }
 
     let selectedPlaylist = playlistData.playlists[0]; // Default
+    console.log('Player: Default playlist:', selectedPlaylist.playlist_name);
+
     if (pageInfo && pageInfo.url) {
       const url = pageInfo.url.toLowerCase();
+      console.log('Player: Parent page URL:', url);
+
       if (url.includes('dtla')) {
+        console.log('Player: URL matches dtla');
         selectedPlaylist = playlistData.playlists.find(p => p.playlist_name === 'Ni de Aquí, Ni de Allá') || selectedPlaylist;
       } else if (url.includes('japantown')) {
+        console.log('Player: URL matches japantown');
         selectedPlaylist = playlistData.playlists.find(p => p.playlist_name === 'Returning to the Harlem of the West') || selectedPlaylist;
       } else if (url.includes('chinatown')) {
+        console.log('Player: URL matches chinatown');
         selectedPlaylist = playlistData.playlists.find(p => p.playlist_name === 'Look Up') || selectedPlaylist;
       } else if (url.includes('mission')) {
+        console.log('Player: URL matches mission');
         selectedPlaylist = playlistData.playlists.find(p => p.playlist_name === 'Coffee Country') || selectedPlaylist;
       }
+      console.log('Player: Selected playlist:', selectedPlaylist.playlist_name);
+    } else {
+      console.log('Player: No pageInfo or URL available, using default playlist');
     }
+
     setupAudioElement();
     setState(prev => ({
       ...prev,
@@ -74,6 +93,7 @@ const Player = () => {
       currentPlaylist: 0,
       currentTrack: 0
     }));
+    console.log('Player: State updated with playlist:', selectedPlaylist.playlist_name);
   }, [pageInfo]);
 
   // Handle track initialization after playlist is loaded
