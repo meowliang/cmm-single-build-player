@@ -20,9 +20,23 @@ export default function useParentPageInfo() {
 
     window.addEventListener('message', handleMessage);
     
-    // Request page info from parent
-    console.log('useParentPageInfo: Sending REQUEST_PAGE_INFO message to parent');
-    window.parent.postMessage({ type: 'REQUEST_PAGE_INFO' }, '*');
+    // Request page info from parent with retry mechanism
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    function requestPageInfo() {
+      console.log(`useParentPageInfo: Sending REQUEST_PAGE_INFO message to parent (attempt ${retryCount + 1})`);
+      window.parent.postMessage({ type: 'REQUEST_PAGE_INFO' }, '*');
+      
+      retryCount++;
+      if (retryCount < maxRetries) {
+        setTimeout(requestPageInfo, 2000); // Retry after 2 seconds
+      } else {
+        console.warn('useParentPageInfo: No response from parent after', maxRetries, 'attempts');
+      }
+    }
+    
+    requestPageInfo();
 
     return () => {
       console.log('useParentPageInfo: Cleaning up event listener');
