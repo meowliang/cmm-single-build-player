@@ -5,6 +5,17 @@ import PlaylistMenu from './PlaylistMenu';
 import PermissionOverlay from '../UI/PermissionOverlay';
 import { useDeviceOrientation } from '../../hooks/useDeviceOrientation';
 import useParentPageInfo from '../../hooks/useParentPageInfo';
+import {
+  trackTourStarted,
+  trackChapterStarted,
+  trackAudioProgress,
+  trackChapterComplete,
+  trackTourComplete,
+  trackView360,
+  trackExit360,
+  resetTourAnalyticsFlags,
+  resetTrackAnalyticsFlags,
+} from '../../utils/analytics';
 import './Player.css';
 
 // Import playlist data
@@ -85,6 +96,9 @@ const Player = () => {
     } else {
       console.log('Player: No pageInfo or URL available, using default playlist');
     }
+
+    resetTourAnalyticsFlags();
+    trackTourStarted(selectedPlaylist);
 
     setupAudioElement();
     setState(prev => ({
@@ -171,11 +185,42 @@ const Player = () => {
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
-      setState(prev => ({
-        ...prev,
-        currentTime: audioRef.current.currentTime,
-        progress: (audioRef.current.currentTime / audioRef.current.duration) * 100
-      }));
+      const currentTime = audioRef.current.currentTime;
+      const duration = audioRef.current.duration;
+      const progress = (currentTime / duration) * 100;
+      
+      setState(prev => {
+        // Analytics tracking for audio progress - use prev state to avoid closure issues
+        if (prev.playlist && prev.playlist.tracks[prev.currentTrack]) {
+          const track = prev.playlist.tracks[prev.currentTrack];
+          
+          // Only log when we reach milestone percentages
+          if (progress >= 25 && progress < 26 && !window.audio25Fired) {
+            console.log('handleTimeUpdate - 25% milestone reached for track:', track.title);
+          }
+          if (progress >= 50 && progress < 51 && !window.audio50Fired) {
+            console.log('handleTimeUpdate - 50% milestone reached for track:', track.title);
+          }
+          if (progress >= 75 && progress < 76 && !window.audio75Fired) {
+            console.log('handleTimeUpdate - 75% milestone reached for track:', track.title);
+          }
+          
+          trackAudioProgress(track, progress);
+
+          // Chapter complete when progress is near the end
+          if (progress >= 99.5 && !window.chapterCompleteFired) {
+            console.log('handleTimeUpdate - chapter complete triggered');
+            trackChapterComplete(prev.playlist, track);
+            window.chapterCompleteFired = true;
+          }
+        }
+        
+        return {
+          ...prev,
+          currentTime: currentTime,
+          progress: progress
+        };
+      });
     }
   };
 
@@ -193,32 +238,68 @@ const Player = () => {
   };
 
   const handleTrackEnd = () => {
-    if (!state.playlist?.tracks) {
-      console.error('No playlist tracks available');
-      return;
-    }
+    console.log('handleTrackEnd called');
+    console.log('Current state:', {
+      playlist: state.playlist?.playlist_name,
+      currentTrack: state.currentTrack,
+      totalTracks: state.playlist?.tracks?.length,
+      tracks: state.playlist?.tracks
+    });
+    
+    // Use functional state update to ensure we have the latest state
+    setState(prevState => {
+      console.log('handleTrackEnd - prevState:', {
+        playlist: prevState.playlist?.playlist_name,
+        currentTrack: prevState.currentTrack,
+        totalTracks: prevState.playlist?.tracks?.length
+      });
+      
+      if (!prevState.playlist?.tracks) {
+        console.error('No playlist tracks available in handleTrackEnd');
+        return prevState;
+      }
 
-    if (state.currentTrack < state.playlist.tracks.length - 1) {
-      setCurrentTrack(state.currentTrack + 1);
-    } else {
-      setState(prev => ({ ...prev, isPlaying: false }));
-    }
+      if (prevState.currentTrack < prevState.playlist.tracks.length - 1) {
+        console.log('Moving to next track:', prevState.currentTrack + 1);
+        // Call setCurrentTrack with the next track index and playlist data
+        setTimeout(() => setCurrentTrack(prevState.currentTrack + 1, prevState.playlist), 0);
+        return prevState;
+      } else {
+        console.log('Last track finished, tour complete');
+        // Last track finished, tour is complete
+        trackTourComplete(prevState.playlist);
+        return { ...prevState, isPlaying: false };
+      }
+    });
   };
 
-  const setCurrentTrack = (index) => {
-    if (!state.playlist?.tracks) {
-      console.error('No playlist tracks available');
+  const setCurrentTrack = (index, playlistData = null) => {
+    console.log('setCurrentTrack called with index:', index);
+    console.log('Current state in setCurrentTrack:', {
+      playlist: state.playlist?.playlist_name,
+      tracks: state.playlist?.tracks,
+      tracksLength: state.playlist?.tracks?.length
+    });
+    
+    // Use passed playlist data if available, otherwise fall back to state
+    const playlistToUse = playlistData || state.playlist;
+    
+    if (!playlistToUse?.tracks) {
+      console.error('No playlist tracks available in setCurrentTrack');
       return;
     }
 
-    const track = state.playlist.tracks[index];
+    const track = playlistToUse.tracks[index];
     if (!track) {
-      console.error('Invalid track index:', index);
+      console.error('Invalid track index:', index, 'Available tracks:', playlistToUse.tracks);
       return;
     }
 
     console.log('Setting current track:', track);
     
+    resetTrackAnalyticsFlags();
+    trackChapterStarted(playlistToUse, track, index);
+
     // Update state with new track and set playing to true
     setState(prev => ({ 
       ...prev, 
@@ -405,11 +486,15 @@ const Player = () => {
   };
 
   const enterXRMode = async () => {
+    if (!state.playlist || !state.playlist.tracks[state.currentTrack]) return;
+    
     const currentTrack = state.playlist.tracks[state.currentTrack];
     if (!currentTrack.IsAR || !currentTrack.XR_Scene) {
-      console.warn("No XR content available");
-      return;
+        console.warn("No XR content available for this track.");
+        return;
     }
+
+    trackView360(state.playlist, currentTrack);
 
     // Check for device orientation permission on iOS
     if (!hasPermission) {
@@ -482,17 +567,16 @@ const Player = () => {
   const exitXRMode = async () => {
     if (!state.isXRMode) return;
 
+    if (state.playlist && state.playlist.tracks[state.currentTrack]) {
+      const currentTrack = state.playlist.tracks[state.currentTrack];
+      trackExit360(state.playlist, currentTrack);
+    }
+
     console.log('Exiting XR mode');
+    setState(prev => ({ ...prev, isXRMode: false, exitingXR: true }));
     
     // First pause the video
     postMessageToIframe({ action: 'pause' });
-    
-    // Update state immediately
-    setState(prev => ({
-      ...prev,
-      isXRMode: false,
-      exitingXR: true
-    }));
     
     // Get current time from iframe
     postMessageToIframe({ action: 'getCurrentTime' });
