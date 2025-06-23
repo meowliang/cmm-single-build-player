@@ -5,11 +5,12 @@ const PlayerControls = ({
   state,
   onPlayPause,
   onVolumeChange,
-  onMute,
+  onToggleMute,
   onSeek,
   onNext,
   onPrevious,
-  onSpeedChange,
+  onPlaybackSpeedChange,
+  onCyclePlaybackSpeed,
   onToggleXR,
   onTogglePlaylist
 }) => {
@@ -18,6 +19,7 @@ const PlayerControls = ({
   const isXRMode = state.isXRMode;
   const volume = state.volume;
   const isMuted = state.isMuted;
+  const playbackSpeed = state.playbackSpeed;
   const showXRButton = currentTrack?.IsAR === true;
 
   const formatTime = (seconds) => {
@@ -28,6 +30,15 @@ const PlayerControls = ({
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const handleVolumeChange = (e) => {
+    const newVolume = parseFloat(e.target.value);
+    onVolumeChange(newVolume);
+  };
+
+  const handleSpeedClick = () => {
+    onCyclePlaybackSpeed();
   };
 
   return (
@@ -102,10 +113,10 @@ const PlayerControls = ({
         <div className="volume-controls">
           <button 
             className="control-btn volume-btn"
-            onClick={onMute}
+            onClick={onToggleMute}
             aria-label={isMuted ? 'Unmute' : 'Mute'}
           >
-            <i className={`fas fa-volume-${isMuted ? 'mute' : 'up'}`}></i>
+            <i className={`fas fa-volume-${isMuted ? 'mute' : volume > 0.5 ? 'up' : volume > 0 ? 'down' : 'mute'}`}></i>
           </button>
           <input
             type="range"
@@ -113,8 +124,9 @@ const PlayerControls = ({
             min="0"
             max="1"
             step="0.1"
-            value={volume}
-            onChange={(e) => onVolumeChange(e.target.value)}
+            value={isMuted ? 0 : volume}
+            onChange={handleVolumeChange}
+            aria-label="Volume control"
           />
         </div>
 
@@ -122,10 +134,11 @@ const PlayerControls = ({
         <div className="additional-controls">
           <button 
             className="control-btn speed-btn"
-            onClick={onSpeedChange}
+            onClick={handleSpeedClick}
             aria-label="Change playback speed"
+            title={`Current speed: ${playbackSpeed}x`}
           >
-            {state.playbackSpeed}x
+            {playbackSpeed}x
           </button>
         </div>
       </div>

@@ -153,10 +153,6 @@
     padding: 15px;
   }
 
-  .playlist-menu-content {
-    max-height: 50vh;
-  }
-
   .playlist-tab {
     padding: 6px 12px;
     font-size: 0.9em;
@@ -177,5 +173,9 @@
 
   .track-duration {
     font-size: 0.8em;
+  }
+
+  .track-title , .track-duration {
+    font-size: 1rem;
   }
 } 

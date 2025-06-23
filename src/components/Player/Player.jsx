@@ -180,6 +180,10 @@ const Player = () => {
       audioRef.current.addEventListener('error', (e) => {
         console.error('Audio error:', e);
       });
+      
+      // Set initial volume and playback speed
+      audioRef.current.volume = state.volume;
+      audioRef.current.playbackRate = state.playbackSpeed;
     }
   };
 
@@ -825,6 +829,62 @@ const Player = () => {
     }));
   };
 
+  // Volume change handler
+  const handleVolumeChange = (newVolume) => {
+    const clampedVolume = Math.max(0, Math.min(1, newVolume));
+    
+    if (audioRef.current) {
+      audioRef.current.volume = clampedVolume;
+    }
+    
+    setState(prev => ({
+      ...prev,
+      volume: clampedVolume,
+      isMuted: clampedVolume === 0
+    }));
+  };
+
+  // Toggle mute
+  const toggleMute = () => {
+    if (state.isMuted) {
+      // Unmute - restore previous volume or default to 0.5
+      const newVolume = state.volume > 0 ? state.volume : 0.5;
+      handleVolumeChange(newVolume);
+    } else {
+      // Mute
+      setState(prev => ({
+        ...prev,
+        isMuted: true
+      }));
+      if (audioRef.current) {
+        audioRef.current.volume = 0;
+      }
+    }
+  };
+
+  // Playback speed change handler
+  const handlePlaybackSpeedChange = (newSpeed) => {
+    const validSpeeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+    const clampedSpeed = validSpeeds.includes(newSpeed) ? newSpeed : 1;
+    
+    if (audioRef.current) {
+      audioRef.current.playbackRate = clampedSpeed;
+    }
+    
+    setState(prev => ({
+      ...prev,
+      playbackSpeed: clampedSpeed
+    }));
+  };
+
+  // Cycle through playback speeds
+  const cyclePlaybackSpeed = () => {
+    const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+    const currentIndex = speeds.indexOf(state.playbackSpeed);
+    const nextIndex = (currentIndex + 1) % speeds.length;
+    handlePlaybackSpeedChange(speeds[nextIndex]);
+  };
+
   const currentTrack = state.playlist?.tracks[state.currentTrack];
 
   return (
@@ -864,6 +924,10 @@ const Player = () => {
             onToggleXR={toggleXR}
             onTogglePlaylist={() => setIsPlaylistVisible(!isPlaylistVisible)}
             onSeek={handleSeek}
+            onVolumeChange={handleVolumeChange}
+            onToggleMute={toggleMute}
+            onPlaybackSpeedChange={handlePlaybackSpeedChange}
+            onCyclePlaybackSpeed={cyclePlaybackSpeed}
           />
         </div>
       </div>

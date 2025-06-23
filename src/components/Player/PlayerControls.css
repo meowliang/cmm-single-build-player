@@ -159,6 +159,8 @@
   flex: 1;
   height: 4px;
   -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   outline: none;
@@ -176,6 +178,27 @@
 
 .volume-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--blue);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.2s;
+}
+
+.volume-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+.volume-slider::-moz-range-track {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  border: none;
+  height: 4px;
 }
 
 .additional-controls {
@@ -221,11 +244,19 @@
 }
 
 @media (max-width: 768px) {
+  
   .player-controls {
     width: 95vw;
     padding: 15px;
     margin-bottom: 20px;
+    max-height: 180px;
+    gap: .2rem
   }
+
+  .volume-slider {
+    max-width: 60px;
+  }
+
 
   .control-btn {
     width: 36px;
@@ -256,6 +287,6 @@
   .xr-mode-btn {
     padding: 10px 20px;
     font-size: 0.9rem;
-    bottom: calc(100% + 180px);
+    bottom: calc(100% + 140px);
   }
 }
