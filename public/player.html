@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMM Player - Offline Audio & XR Experience</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <!-- Audio Element -->
+    <audio id="audioElement" preload="metadata"></audio>
+
+    <!-- Main Player Container -->
+    <div id="playerContainer" class="player-container">
+        <!-- Audio Content -->
+        <div id="audioContent" class="audio-content active">
+            <img id="albumArt" class="album-art" src="" alt="Album Art">
+            <div class="track-info">
+                <h2 id="trackTitle" class="track-title">Loading...</h2>
+                <p id="trackArtist" class="track-artist">Loading...</p>
+            </div>
+        </div>
+
+        <!-- XR Content -->
+        <div id="xrContent" class="xr-content">
+            <div id="sceneContainer" class="scene-container"></div>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="player-controls">
+            <!-- Menu Button -->
+            <button id="menuBtn" class="control-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Offline Button -->
+            <button id="offlineBtn" class="control-btn" title="Offline Options">
+                <i class="fas fa-download"></i>
+            </button>
+
+            <!-- Playback Controls -->
+            <button id="prevBtn" class="control-btn">
+                <i class="fas fa-backward"></i>
+            </button>
+
+            <button id="playPauseBtn" class="control-btn">
+                <i class="fas fa-play"></i>
+            </button>
+
+            <button id="nextBtn" class="control-btn">
+                <i class="fas fa-forward"></i>
+            </button>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <span id="currentTime" class="time">0:00</span>
+                <div class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+                <span id="duration" class="time">0:00</span>
+            </div>
+
+            <!-- Volume Controls -->
+            <button id="muteBtn" class="control-btn">
+                <i class="fas fa-volume-up"></i>
+            </button>
+
+            <input id="volumeSlider" type="range" min="0" max="1" step="0.1" value="1" class="volume-slider">
+
+            <!-- Speed Button -->
+            <button id="speedBtn" class="control-btn">1x</button>
+
+            <!-- XR Mode Buttons -->
+            <button id="viewXRBtn" class="control-btn xr-btn" style="display: none;">
+                <i class="fas fa-vr-cardboard"></i>
+            </button>
+
+            <button id="exitXRBtn" class="control-btn xr-btn" style="display: none;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Playlist Menu -->
+        <div id="playlistContainer" class="playlist-container">
+            <div class="playlist-header">
+                <h3>Playlist</h3>
+                <button class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="playlistTracks" class="tracks-list">
+                <!-- Tracks will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Permission Overlay -->
+        <div id="permissionOverlay" class="permission-overlay" style="display: none;">
+            <div class="permission-content">
+                <h3>Motion Permission Required</h3>
+                <p>This app uses device motion for enhanced XR experiences.</p>
+                <button id="enableMotionBtn" class="permission-btn primary">Enable Motion</button>
+                <button id="skipMotionBtn" class="permission-btn secondary">Skip</button>
+            </div>
+        </div>
+
+        <!-- Video Frame for XR -->
+        <iframe id="videoFrame" class="video-frame" style="display: none;"></iframe>
+    </div>
+
+    <!-- Scripts -->
+    <script src="pwa-manager.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 

@@ -1,5 +1,3 @@
-
-
 // State management
 const state = {
   currentTrack: 0,
@@ -41,7 +39,7 @@ const elements = {
   prevBtn: document.getElementById('prevBtn'),
   nextBtn: document.getElementById('nextBtn'),
   speedBtn: document.getElementById('speedBtn'),
-
+  offlineBtn: document.getElementById('offlineBtn'),
 };
 
 let playlist = null;
@@ -204,6 +202,11 @@ function setupEventListeners() {
   elements.prevBtn.addEventListener('click', playPreviousTrack);
   elements.nextBtn.addEventListener('click', playNextTrack);
   elements.speedBtn.addEventListener('click', togglePlaybackSpeed);
+
+  // Offline menu button
+  if (elements.offlineBtn) {
+    elements.offlineBtn.addEventListener('click', toggleOfflineMenu);
+  }
 
   elements.playlistTracks.addEventListener('click', (e) => {
       const trackElement = e.target.closest('.playlist-track');
@@ -1157,6 +1160,165 @@ function showPermissionFeedback(message) {
   setTimeout(() => {
     feedback.style.opacity = '0';
     setTimeout(() => feedback.remove(), 500);
+  }, 3000);
+}
+
+/****************************** OFFLINE FUNCTIONALITY ******************************** */
+
+// Offline menu functionality
+function toggleOfflineMenu() {
+  const existingMenu = document.getElementById('offline-menu');
+  if (existingMenu) {
+    existingMenu.remove();
+    return;
+  }
+
+  const menu = document.createElement('div');
+  menu.id = 'offline-menu';
+  menu.className = 'offline-menu';
+  menu.innerHTML = `
+    <h3>Offline Options</h3>
+    <div class="offline-menu-item" onclick="preloadAllContent()">
+      <i class="fas fa-download"></i>
+      Preload All Content
+    </div>
+    <div class="offline-menu-item" onclick="showCacheStatus()">
+      <i class="fas fa-info-circle"></i>
+      Cache Status
+    </div>
+    <div class="offline-menu-item" onclick="clearAllCaches()">
+      <i class="fas fa-trash"></i>
+      Clear Cache
+    </div>
+    <div class="offline-menu-item" onclick="toggleOfflineMenu()">
+      <i class="fas fa-times"></i>
+      Close
+    </div>
+  `;
+
+  document.body.appendChild(menu);
+
+  // Auto-close after 10 seconds
+  setTimeout(() => {
+    if (menu.parentNode) {
+      menu.remove();
+    }
+  }, 10000);
+}
+
+// Preload all content for offline use
+async function preloadAllContent() {
+  if (!navigator.onLine) {
+    showToast('Cannot preload while offline', 'error');
+    return;
+  }
+
+  try {
+    showToast('Starting content preload...', 'info');
+    
+    let totalFiles = 0;
+    let loadedFiles = 0;
+    
+    // Count total files
+    playlist.tracks.forEach(track => {
+      totalFiles += 2; // audio + artwork
+      if (track.IsAR && track.XR_Scene) {
+        totalFiles += 1; // XR video
+      }
+    });
+
+    // Preload files
+    for (const track of playlist.tracks) {
+      try {
+        // Preload audio
+        await preloadFile(track.audio_url);
+        loadedFiles++;
+        updatePreloadProgress(loadedFiles, totalFiles);
+
+        // Preload artwork
+        await preloadFile(track.artwork_url);
+        loadedFiles++;
+        updatePreloadProgress(loadedFiles, totalFiles);
+
+        // Preload XR video if available
+        if (track.IsAR && track.XR_Scene) {
+          await preloadFile(track.XR_Scene);
+          loadedFiles++;
+          updatePreloadProgress(loadedFiles, totalFiles);
+        }
+      } catch (error) {
+        console.error('Failed to preload:', track.title, error);
+      }
+    }
+
+    showToast(`Preload complete! ${loadedFiles} files cached`, 'success');
+  } catch (error) {
+    console.error('Preload failed:', error);
+    showToast('Preload failed. Please try again.', 'error');
+  }
+}
+
+async function preloadFile(url) {
+  const response = await fetch(url, { cache: 'force-cache' });
+  if (!response.ok) {
+    throw new Error(`Failed to load ${url}`);
+  }
+  return response;
+}
+
+function updatePreloadProgress(loaded, total) {
+  const progress = Math.round((loaded / total) * 100);
+  showToast(`Preloading... ${progress}%`, 'info');
+}
+
+// Show cache status
+async function showCacheStatus() {
+  if ('caches' in window) {
+    const cacheNames = await caches.keys();
+    const cacheStats = {};
+    
+    for (const name of cacheNames) {
+      const cache = await caches.open(name);
+      const keys = await cache.keys();
+      cacheStats[name] = keys.length;
+    }
+    
+    const statusText = Object.entries(cacheStats)
+      .map(([name, count]) => `${name}: ${count} files`)
+      .join('\n');
+    
+    showToast(`Cache Status:\n${statusText}`, 'info');
+  } else {
+    showToast('Cache API not supported', 'error');
+  }
+}
+
+// Clear all caches
+async function clearAllCaches() {
+  if ('caches' in window) {
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(name => caches.delete(name)));
+    showToast('All caches cleared', 'success');
+  } else {
+    showToast('Cache API not supported', 'error');
+  }
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+
+  // Animate in
+  setTimeout(() => toast.classList.add('show'), 100);
+
+  // Auto-remove
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
 
