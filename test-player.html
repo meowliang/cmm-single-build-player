@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMM Player - Test Version</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --navy: #182F48;
+            --yellow: #FCE676;
+            --pink: #EBA6B1;
+            --purple: #B1AFDA;
+            --blue: #81C7D3;
+            --creme: #FFFDEC;
+            --red: #D22D0B;
+            --green: #4A7446;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--navy);
+            color: var(--creme);
+            line-height: 1.6;
+        }
+
+        .player-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: var(--navy);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .audio-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .album-art {
+            width: 300px;
+            height: 300px;
+            border-radius: 8px;
+            background: linear-gradient(45deg, var(--blue), var(--purple));
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--navy);
+        }
+
+        .track-info {
+            text-align: center;
+            color: var(--creme);
+        }
+
+        .track-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .track-artist {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .player-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-radius: 20px 20px 0 0;
+            margin: 0 20px 20px 20px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--creme);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--blue);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time {
+            color: var(--creme);
+            font-size: 0.8rem;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .volume-slider {
+            width: 80px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--blue);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .playlist-container {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(24, 47, 72, 0.95);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .playlist-container.open {
+            left: 0;
+        }
+
+        .playlist-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--creme);
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        .tracks-list {
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 80px);
+        }
+
+        .playlist-track {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .playlist-track:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .playlist-track.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid var(--blue);
+        }
+
+        .xr-badge {
+            background: var(--blue);
+            color: var(--navy);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+        }
+
+        /* PWA UI Elements */
+        .install-banner,
+        .update-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--navy) 100%);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            color: var(--creme);
+            transform: translateY(100px);
+            opacity: 0;
+            animation: slideUp 0.3s ease forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--navy);
+            color: var(--creme);
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+            max-width: 300px;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .toast-warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+
+        .offline-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--navy);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 9998;
+            min-width: 200px;
+            color: var(--creme);
+            backdrop-filter: blur(10px);
+        }
+
+        .offline-menu h3 {
+            margin: 0 0 12px 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .offline-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+        }
+
+        .offline-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .offline-menu-item i {
+            width: 16px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .player-controls {
+                margin: 0 10px 10px 10px;
+                padding: 15px;
+            }
+
+            .album-art {
+                width: 200px;
+                height: 200px;
+            }
+
+            .playlist-container {
+                width: 100%;
+                left: -100%;
+            }
+
+            .install-banner,
+            .update-banner {
+                left: 10px;
+                right: 10px;
+            }
+
+            .toast {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+
+            .offline-menu {
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio Element -->
+    <audio id="audioElement" preload="metadata"></audio>
+
+    <!-- Main Player Container -->
+    <div id="playerContainer" class="player-container">
+        <!-- Audio Content -->
+        <div id="audioContent" class="audio-content active">
+            <div class="album-art">
+                <i class="fas fa-music"></i>
+            </div>
+            <div class="track-info">
+                <h2 id="trackTitle" class="track-title">CMM Player Test</h2>
+                <p id="trackArtist" class="track-artist">Offline Audio & XR Experience</p>
+            </div>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="player-controls">
+            <!-- Menu Button -->
+            <button id="menuBtn" class="control-btn" title="Playlist">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Offline Button -->
+            <button id="offlineBtn" class="control-btn" title="Offline Options">
+                <i class="fas fa-download"></i>
+            </button>
+
+            <!-- Playback Controls -->
+            <button id="prevBtn" class="control-btn" title="Previous">
+                <i class="fas fa-backward"></i>
+            </button>
+
+            <button id="playPauseBtn" class="control-btn" title="Play/Pause">
+                <i class="fas fa-play"></i>
+            </button>
+
+            <button id="nextBtn" class="control-btn" title="Next">
+                <i class="fas fa-forward"></i>
+            </button>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <span id="currentTime" class="time">0:00</span>
+                <div class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+                <span id="duration" class="time">0:00</span>
+            </div>
+
+            <!-- Volume Controls -->
+            <button id="muteBtn" class="control-btn" title="Mute">
+                <i class="fas fa-volume-up"></i>
+            </button>
+
+            <input id="volumeSlider" type="range" min="0" max="1" step="0.1" value="1" class="volume-slider" title="Volume">
+
+            <!-- Speed Button -->
+            <button id="speedBtn" class="control-btn" title="Playback Speed">1x</button>
+        </div>
+
+        <!-- Playlist Menu -->
+        <div id="playlistContainer" class="playlist-container">
+            <div class="playlist-header">
+                <h3>Playlist</h3>
+                <button class="close-btn" id="closePlaylist">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="playlistTracks" class="tracks-list">
+                <!-- Sample tracks for testing -->
+                <div class="playlist-track active" data-index="0">
+                    <div>1. Test Track 1</div>
+                </div>
+                <div class="playlist-track" data-index="1">
+                    <div>2. Test Track 2 <span class="xr-badge">360°</span></div>
+                </div>
+                <div class="playlist-track" data-index="2">
+                    <div>3. Test Track 3</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple test functionality
+        const elements = {
+            audioElement: document.getElementById('audioElement'),
+            playPauseBtn: document.getElementById('playPauseBtn'),
+            muteBtn: document.getElementById('muteBtn'),
+            volumeSlider: document.getElementById('volumeSlider'),
+            progress: document.getElementById('progress'),
+            currentTime: document.getElementById('currentTime'),
+            duration: document.getElementById('duration'),
+            menuBtn: document.getElementById('menuBtn'),
+            closePlaylist: document.getElementById('closePlaylist'),
+            playlistContainer: document.getElementById('playlistContainer'),
+            offlineBtn: document.getElementById('offlineBtn'),
+            playlistTracks: document.getElementById('playlistTracks')
+        };
+
+        let isPlaying = false;
+        let isMuted = false;
+
+        // Play/Pause functionality
+        elements.playPauseBtn.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            elements.playPauseBtn.innerHTML = isPlaying ? 
+                '<i class="fas fa-pause"></i>' : 
+                '<i class="fas fa-play"></i>';
+            
+            if (isPlaying) {
+                showToast('Play button clicked!', 'success');
+            } else {
+                showToast('Pause button clicked!', 'warning');
+            }
+        });
+
+        // Mute functionality
+        elements.muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            elements.muteBtn.innerHTML = isMuted ? 
+                '<i class="fas fa-volume-mute"></i>' : 
+                '<i class="fas fa-volume-up"></i>';
+            showToast(isMuted ? 'Audio muted' : 'Audio unmuted', 'info');
+        });
+
+        // Playlist toggle
+        elements.menuBtn.addEventListener('click', () => {
+            elements.playlistContainer.classList.add('open');
+        });
+
+        elements.closePlaylist.addEventListener('click', () => {
+            elements.playlistContainer.classList.remove('open');
+        });
+
+        // Offline menu
+        elements.offlineBtn.addEventListener('click', () => {
+            toggleOfflineMenu();
+        });
+
+        // Playlist track selection
+        elements.playlistTracks.addEventListener('click', (e) => {
+            const track = e.target.closest('.playlist-track');
+            if (track) {
+                // Remove active class from all tracks
+                document.querySelectorAll('.playlist-track').forEach(t => 
+                    t.classList.remove('active')
+                );
+                // Add active class to clicked track
+                track.classList.add('active');
+                
+                const index = track.dataset.index;
+                showToast(`Selected track ${parseInt(index) + 1}`, 'success');
+            }
+        });
+
+        // Volume slider
+        elements.volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value;
+            showToast(`Volume: ${Math.round(volume * 100)}%`, 'info');
+        });
+
+        // Progress bar click
+        document.querySelector('.progress-bar').addEventListener('click', (e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const clickPosition = (e.clientX - rect.left) / rect.width;
+            const progress = clickPosition * 100;
+            elements.progress.style.width = `${progress}%`;
+            showToast(`Seeked to ${Math.round(progress)}%`, 'info');
+        });
+
+        // Offline menu functionality
+        function toggleOfflineMenu() {
+            const existingMenu = document.getElementById('offline-menu');
+            if (existingMenu) {
+                existingMenu.remove();
+                return;
+            }
+
+            const menu = document.createElement('div');
+            menu.id = 'offline-menu';
+            menu.className = 'offline-menu';
+            menu.innerHTML = `
+                <h3>Offline Options</h3>
+                <div class="offline-menu-item" onclick="preloadContent()">
+                    <i class="fas fa-download"></i>
+                    Preload All Content
+                </div>
+                <div class="offline-menu-item" onclick="showCacheStatus()">
+                    <i class="fas fa-info-circle"></i>
+                    Cache Status
+                </div>
+                <div class="offline-menu-item" onclick="clearCache()">
+                    <i class="fas fa-trash"></i>
+                    Clear Cache
+                </div>
+                <div class="offline-menu-item" onclick="toggleOfflineMenu()">
+                    <i class="fas fa-times"></i>
+                    Close
+                </div>
+            `;
+
+            document.body.appendChild(menu);
+
+            // Auto-close after 10 seconds
+            setTimeout(() => {
+                if (menu.parentNode) {
+                    menu.remove();
+                }
+            }, 10000);
+        }
+
+        // Mock offline functions
+        function preloadContent() {
+            showToast('Starting content preload...', 'info');
+            setTimeout(() => {
+                showToast('Preload complete! 15 files cached', 'success');
+            }, 2000);
+        }
+
+        function showCacheStatus() {
+            showToast('Cache Status:\ncmm-static-v1: 8 files\ncmm-media-v1: 7 files', 'info');
+        }
+
+        function clearCache() {
+            showToast('All caches cleared', 'success');
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Auto-remove
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize
+        showToast('CMM Player Test Version Loaded!', 'success');
+    </script>
+</body>
+</html> 
