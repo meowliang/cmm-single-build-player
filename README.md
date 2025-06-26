@@ -1,70 +1,84 @@
-# Getting Started with Create React App
+# Playlists.json S3 URL Updater
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This script updates the `playlists.json` file with new S3 URLs from your AWS bucket.
 
-## Available Scripts
+## Prerequisites
 
-In the project directory, you can run:
+1. **AWS Credentials**: Make sure you have AWS credentials configured. You can do this by:
+   - Installing the AWS CLI and running `aws configure`
+   - Setting environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
+   - Using IAM roles if running on EC2
 
-### `npm start`
+2. **Python Dependencies**: Install the required packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Usage
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. **Place the script in the same directory as your `playlists.json` file**
 
-### `npm test`
+2. **Run the script**:
+   ```bash
+   python update_playlists.py
+   ```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## What the script does
 
-### `npm run build`
+1. **Lists all files** in your S3 bucket under the `2025-06-15-CMM-XRTOUR-CONTENT-FREEZE/` prefix
+2. **Categorizes files** by:
+   - Playlist name (from folder structure)
+   - Chapter number (extracted from filename)
+   - File type (audio, artwork, or XR)
+3. **Updates URLs** in `playlists.json` for:
+   - `audio_url` (from AUDIO/ folder)
+   - `artwork_url` (from THUMBNAILS/ folder)
+   - `XR_Scene` (from XR-src/ folder)
+4. **Saves the updated file** back to disk
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Expected S3 Structure
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The script expects your S3 bucket to have this structure:
+```
+cmm-cloud/
+└── 2025-06-15-CMM-XRTOUR-CONTENT-FREEZE/
+    ├── Look Up/
+    │   ├── AUDIO/
+    │   ├── THUMBNAILS/
+    │   └── XR-src/
+    ├── Coffee Country/
+    │   ├── AUDIO/
+    │   ├── THUMBNAILS/
+    │   └── XR-src/
+    ├── Ni de Aquí, ni de Allá/
+    │   ├── AUDIO/
+    │   ├── THUMBNAILS/
+    │   └── XR-src/
+    └── Returning to the Harlem of the West/
+        ├── AUDIO/
+        ├── THUMBNAILS/
+        └── XR-src/
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Chapter Number Extraction
 
-### `npm run eject`
+The script extracts chapter numbers from filenames using these patterns:
+- `CH-1`, `CH-2`, `CH-7.5` (matches "CH-" followed by numbers)
+- `Chapter 1`, `Chapter 2` (matches "Chapter" followed by numbers)
+- `1`, `2`, `7.5` (matches just numbers)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Output
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+The script will:
+- Show how many files were found in S3
+- Display categorized files by playlist and chapter
+- Print each URL update as it happens
+- Show the total number of URLs updated
+- Save the updated `playlists.json` file
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Backup
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The script modifies your `playlists.json` file in place. Consider making a backup before running:
+```bash
+cp playlists.json playlists.json.backup
+```
