@@ -45,6 +45,7 @@ self.addEventListener('message', (event) => {
   }
 });
 
+
 // Cache media files
 async function cacheMediaFiles(urls) {
   const cache = await caches.open(MEDIA_CACHE_NAME);
