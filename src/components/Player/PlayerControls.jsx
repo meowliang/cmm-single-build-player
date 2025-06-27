@@ -1,4 +1,5 @@
 import React from 'react';
+import DownloadButton from '../UI/DownloadButton';
 import './PlayerControls.css';
 
 const PlayerControls = ({
@@ -43,6 +44,11 @@ const PlayerControls = ({
 
   return (
     <>
+      {/* Download Button - Upper Right */}
+      <div className="download-button-wrapper">
+        <DownloadButton />
+      </div>
+
       {showXRButton && (
         <button 
           className="xr-mode-btn"
