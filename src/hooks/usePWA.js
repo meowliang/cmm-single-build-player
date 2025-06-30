@@ -34,10 +34,35 @@ export const usePWA = () => {
           return;
         }
 
-        const registration = await navigator.serviceWorker.register('/service-worker.js');
-        console.log('Service Worker registered successfully:', registration);
+        // In production, try to register the service worker
+        // Try multiple service worker paths in case one fails
+        const serviceWorkerPaths = ['/service-worker.js', '/sw.js'];
+        let registration = null;
+        let lastError = null;
+
+        for (const swPath of serviceWorkerPaths) {
+          try {
+            console.log(`Trying to register service worker at: ${swPath}`);
+            registration = await navigator.serviceWorker.register(swPath);
+            console.log('Service Worker registered successfully:', registration);
+            setIsServiceWorkerRegistered(true);
+            setSwError(null);
+            return; // Success, exit the loop
+          } catch (error) {
+            console.warn(`Failed to register service worker at ${swPath}:`, error);
+            lastError = error;
+            continue; // Try the next path
+          }
+        }
+
+        // If all service worker registrations failed, fall back to direct cache API
+        console.log('All service worker registrations failed, falling back to direct cache API');
         setIsServiceWorkerRegistered(true);
-        setSwError(null);
+        setSwError('Service Worker unavailable, using direct cache API');
+        
+        // Set up fetch interceptor for production fallback
+        setupProductionFetchInterceptor();
+        
       } catch (error) {
         console.error('Service Worker registration failed:', error);
         
@@ -102,6 +127,57 @@ export const usePWA = () => {
           }
         };
       }
+    };
+
+    // Set up fetch interceptor for production fallback
+    const setupProductionFetchInterceptor = () => {
+      // Store original fetch
+      const originalFetch = window.fetch;
+      
+      // Override fetch to check cache first
+      window.fetch = async (input, init) => {
+        const url = typeof input === 'string' ? input : input.url;
+        
+        // Only intercept media requests
+        const isMediaRequest = url.match(/\.(mp3|mp4|jpg|jpeg|png|gif|webp)$/i);
+        
+        if (isMediaRequest) {
+          try {
+            // Try to get from cache first
+            const cache = await caches.open('cmm-media-cache-v1');
+            const cachedResponse = await cache.match(url);
+            
+            if (cachedResponse) {
+              console.log('Production fallback: Serving from cache:', url);
+              return cachedResponse;
+            }
+          } catch (error) {
+            console.log('Production fallback: Cache check failed:', error);
+          }
+        }
+        
+        // Fall back to original fetch
+        try {
+          const response = await originalFetch(input, init);
+          return response;
+        } catch (error) {
+          // If network fails, try cache as fallback
+          if (isMediaRequest) {
+            try {
+              const cache = await caches.open('cmm-media-cache-v1');
+              const cachedResponse = await cache.match(url);
+              
+              if (cachedResponse) {
+                console.log('Production fallback: Network failed, serving from cache:', url);
+                return cachedResponse;
+              }
+            } catch (cacheError) {
+              console.log('Production fallback: Cache fallback failed:', cacheError);
+            }
+          }
+          throw error;
+        }
+      };
     };
 
     // Wait for the page to load before registering
@@ -174,12 +250,13 @@ export const usePWA = () => {
     setIsDownloading(true);
     setDownloadProgress({ current: 0, total: urls.length, successCount: 0, failedCount: 0 });
 
-    // Check if we're in development mode
+    // Check if we're in development mode or using fallback
     const isDevelopment = process.env.NODE_ENV === 'development';
+    const isUsingFallback = swError && swError.includes('direct cache API');
     
-    if (isDevelopment) {
-      // In development, use Cache API directly
-      console.log('Development mode: Using Cache API directly...');
+    if (isDevelopment || isUsingFallback) {
+      // In development or fallback mode, use Cache API directly
+      console.log(`${isDevelopment ? 'Development' : 'Production fallback'} mode: Using Cache API directly...`);
       
       try {
         const cache = await caches.open('cmm-media-cache-v1');
@@ -217,13 +294,13 @@ export const usePWA = () => {
           await new Promise(resolve => setTimeout(resolve, 50));
         }
 
-        console.log(`Development mode: Caching complete. ${successCount} successful, ${failedCount} failed`);
+        console.log(`${isDevelopment ? 'Development' : 'Production fallback'} mode: Caching complete. ${successCount} successful, ${failedCount} failed`);
         setIsDownloading(false);
         
         // Refresh cache status
         getCacheStatus(playlistData);
       } catch (error) {
-        console.error('Error in development caching:', error);
+        console.error('Error in caching:', error);
         setIsDownloading(false);
       }
       return;
@@ -244,7 +321,7 @@ export const usePWA = () => {
       console.error('Error initiating download:', error);
       setIsDownloading(false);
     }
-  }, [isServiceWorkerRegistered, extractMediaUrls]);
+  }, [isServiceWorkerRegistered, extractMediaUrls, swError]);
 
   // Get cache status for all media files
   const getCacheStatus = useCallback(async (playlistData) => {
@@ -253,11 +330,12 @@ export const usePWA = () => {
     const urls = extractMediaUrls(playlistData);
     if (urls.length === 0) return;
 
-    // Check if we're in development mode
+    // Check if we're in development mode or using fallback
     const isDevelopment = process.env.NODE_ENV === 'development';
+    const isUsingFallback = swError && swError.includes('direct cache API');
     
-    if (isDevelopment) {
-      // In development, check cache directly
+    if (isDevelopment || isUsingFallback) {
+      // In development or fallback mode, check cache directly
       try {
         const cache = await caches.open('cmm-media-cache-v1');
         const status = {};
@@ -270,7 +348,7 @@ export const usePWA = () => {
         setCacheStatus(status);
         return status;
       } catch (error) {
-        console.error('Error checking cache status in development:', error);
+        console.error('Error checking cache status:', error);
       }
     }
 
@@ -294,7 +372,7 @@ export const usePWA = () => {
     } catch (error) {
       console.error('Error getting cache status:', error);
     }
-  }, [isServiceWorkerRegistered, extractMediaUrls]);
+  }, [isServiceWorkerRegistered, extractMediaUrls, swError]);
 
   // Clear all cached media
   const clearCache = useCallback(async () => {

@@ -81,6 +81,9 @@ const DownloadButton = () => {
       if (swError.includes('development mode')) {
         return 'Offline features available in production build';
       }
+      if (swError.includes('direct cache API')) {
+        return 'Using direct cache API (offline features available)';
+      }
       return `Service Worker error: ${swError}`;
     }
     return 'Offline mode not available';
@@ -135,9 +138,17 @@ const DownloadButton = () => {
       )}
 
       {/* Service worker status indicator */}
-      {!isServiceWorkerRegistered && (
+      {!isServiceWorkerRegistered && !swError?.includes('direct cache API') && (
         <div className="service-worker-status">
           <i className="fas fa-exclamation-triangle"></i>
+          <span>{getErrorMessage()}</span>
+        </div>
+      )}
+      
+      {/* Fallback mode indicator */}
+      {swError?.includes('direct cache API') && (
+        <div className="service-worker-status" style={{ background: 'rgba(76, 175, 80, 0.1)', color: '#4caf50', borderColor: 'rgba(76, 175, 80, 0.3)' }}>
+          <i className="fas fa-info-circle"></i>
           <span>{getErrorMessage()}</span>
         </div>
       )}
