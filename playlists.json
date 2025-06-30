@@ -432,7 +432,7 @@
             "artwork_url": "https://cmm-cloud.s3.us-west-1.amazonaws.com/2025-06-15-CMM-XRTOUR-CONTENT-FREEZE/Returning+to+the+Harlem+of+the+West/THUMBNAILS/2025-03-15-JAPANTOWN-CH4-ART.jpg",
             "playlist": "Returning to the Harlem of the West",
             "IsAR": true,
-            "XR_Scene": "",
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-01-JAPANTOWN-XR/2025-03-15-JAPANTOWN-CH-4-LOW.mp4",
             "duration": "1:44:00"
           },
           {
