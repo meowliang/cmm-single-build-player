@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/cmm-single-build-player/static/css/main.25b5325e.css",
+    "main.js": "/cmm-single-build-player/static/js/main.6f9aa5d0.js",
+    "static/js/453.66edf0db.chunk.js": "/cmm-single-build-player/static/js/453.66edf0db.chunk.js",
+    "static/media/GothicA1-Regular.ttf": "/cmm-single-build-player/static/media/GothicA1-Regular.f8d31e6379bbc3879859.ttf",
+    "static/media/GothicA1-ExtraBold.ttf": "/cmm-single-build-player/static/media/GothicA1-ExtraBold.0a6ac067f233054a04d6.ttf",
+    "static/media/Figtree-BoldItalic.ttf": "/cmm-single-build-player/static/media/Figtree-BoldItalic.70f4de7f12ea2c07dd26.ttf",
+    "static/media/Figtree-Italic.ttf": "/cmm-single-build-player/static/media/Figtree-Italic.878631301ddbbe3bc956.ttf",
+    "static/media/Figtree-Bold.ttf": "/cmm-single-build-player/static/media/Figtree-Bold.ad7c0bd91eff9a9a2a61.ttf",
+    "static/media/Figtree-Regular.ttf": "/cmm-single-build-player/static/media/Figtree-Regular.75baecc5482bc087f149.ttf",
+    "index.html": "/cmm-single-build-player/index.html",
+    "main.25b5325e.css.map": "/cmm-single-build-player/static/css/main.25b5325e.css.map",
+    "main.6f9aa5d0.js.map": "/cmm-single-build-player/static/js/main.6f9aa5d0.js.map",
+    "453.66edf0db.chunk.js.map": "/cmm-single-build-player/static/js/453.66edf0db.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.25b5325e.css",
+    "static/js/main.6f9aa5d0.js"
+  ]
+}

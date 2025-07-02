@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMM Player - Offline Audio & XR Experience</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        /* Fallback styles in case external CSS doesn't load */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #182F48;
+            color: #FFFDEC;
+            font-family: Arial, sans-serif;
+        }
+        
+        .player-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #182F48;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .audio-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 20px;
+        }
+        
+        .album-art {
+            width: 300px;
+            height: 300px;
+            border-radius: 8px;
+            background: #ccc;
+            margin-bottom: 20px;
+        }
+        
+        .track-info {
+            text-align: center;
+            color: #FFFDEC;
+        }
+        
+        .player-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #FFFDEC;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            max-width: 300px;
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #81C7D3;
+            border-radius: 2px;
+            width: 0%;
+        }
+        
+        .time {
+            color: #FFFDEC;
+            font-size: 0.8rem;
+            min-width: 40px;
+        }
+        
+        .volume-slider {
+            width: 80px;
+        }
+        
+        .playlist-container {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(24, 47, 72, 0.95);
+            transition: left 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .playlist-container.open {
+            left: 0;
+        }
+        
+        .permission-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .permission-content {
+            background: #182F48;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 400px;
+        }
+        
+        .permission-btn {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .primary {
+            background: #FCE676;
+            color: #182F48;
+        }
+        
+        .secondary {
+            background: transparent;
+            color: #FFFDEC;
+            border: 1px solid #FFFDEC;
+        }
+        
+        /* PWA UI Elements */
+        .install-banner,
+        .update-banner {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #81C7D3 0%, #182F48 100%);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            color: #FFFDEC;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #182F48;
+            color: #FFFDEC;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 10001;
+            max-width: 300px;
+        }
+        
+        .offline-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #182F48;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 9998;
+            min-width: 200px;
+            color: #FFFDEC;
+        }
+        
+        .offline-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        
+        .offline-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Audio Element -->
+    <audio id="audioElement" preload="metadata"></audio>
+
+    <!-- Main Player Container -->
+    <div id="playerContainer" class="player-container">
+        <!-- Audio Content -->
+        <div id="audioContent" class="audio-content active">
+            <img id="albumArt" class="album-art" src="" alt="Album Art">
+            <div class="track-info">
+                <h2 id="trackTitle" class="track-title">Loading...</h2>
+                <p id="trackArtist" class="track-artist">Loading...</p>
+            </div>
+        </div>
+
+        <!-- XR Content -->
+        <div id="xrContent" class="xr-content">
+            <div id="sceneContainer" class="scene-container"></div>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="player-controls">
+            <!-- Menu Button -->
+            <button id="menuBtn" class="control-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Offline Button -->
+            <button id="offlineBtn" class="control-btn" title="Offline Options">
+                <i class="fas fa-download"></i>
+            </button>
+
+            <!-- Playback Controls -->
+            <button id="prevBtn" class="control-btn">
+                <i class="fas fa-backward"></i>
+            </button>
+
+            <button id="playPauseBtn" class="control-btn">
+                <i class="fas fa-play"></i>
+            </button>
+
+            <button id="nextBtn" class="control-btn">
+                <i class="fas fa-forward"></i>
+            </button>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <span id="currentTime" class="time">0:00</span>
+                <div class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+                <span id="duration" class="time">0:00</span>
+            </div>
+
+            <!-- Volume Controls -->
+            <button id="muteBtn" class="control-btn">
+                <i class="fas fa-volume-up"></i>
+            </button>
+
+            <input id="volumeSlider" type="range" min="0" max="1" step="0.1" value="1" class="volume-slider">
+
+            <!-- Speed Button -->
+            <button id="speedBtn" class="control-btn">1x</button>
+
+            <!-- XR Mode Buttons -->
+            <button id="viewXRBtn" class="control-btn xr-btn" style="display: none;">
+                <i class="fas fa-vr-cardboard"></i>
+            </button>
+
+            <button id="exitXRBtn" class="control-btn xr-btn" style="display: none;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Playlist Menu -->
+        <div id="playlistContainer" class="playlist-container">
+            <div class="playlist-header">
+                <h3>Playlist</h3>
+                <button class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="playlistTracks" class="tracks-list">
+                <!-- Tracks will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Permission Overlay -->
+        <div id="permissionOverlay" class="permission-overlay" style="display: none;">
+            <div class="permission-content">
+                <h3>Motion Permission Required</h3>
+                <p>This app uses device motion for enhanced XR experiences.</p>
+                <button id="enableMotionBtn" class="permission-btn primary">Enable Motion</button>
+                <button id="skipMotionBtn" class="permission-btn secondary">Skip</button>
+            </div>
+        </div>
+
+        <!-- Video Frame for XR -->
+        <iframe id="videoFrame" class="video-frame" style="display: none;"></iframe>
+    </div>
+
+    <!-- Scripts -->
+    <script src="pwa-manager.js"></script>
+    <script src="../app.js"></script>
+</body>
+</html> 
