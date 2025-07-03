@@ -1,5 +1,5 @@
 const STATIC_CACHE = 'cmm-static-v1';
-const MEDIA_CACHE = 'cmm-media-v1';
+const MEDIA_CACHE = 'cmm-media-cache-v1';
 
 // Files to cache immediately
 const STATIC_FILES = [
@@ -17,38 +17,39 @@ const STATIC_FILES = [
 
 // Install event - cache static files
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
+  console.log('[SW] 🚀 Installing...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
-        console.log('[SW] Caching static files');
+        console.log('[SW] 📁 Caching static files');
         return cache.addAll(STATIC_FILES);
       })
       .then(() => {
-        console.log('[SW] Static files cached successfully');
+        console.log('[SW] ✅ Static files cached successfully');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] Error caching static files:', error);
+        console.error('[SW] ❌ Error caching static files:', error);
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
+  console.log('[SW] 🔄 Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
+      console.log('[SW] 📋 Found caches:', cacheNames);
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== STATIC_CACHE && cacheName !== MEDIA_CACHE) {
-            console.log('[SW] Deleting old cache:', cacheName);
+            console.log('[SW] 🗑️ Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
-      console.log('[SW] Activated');
+      console.log('[SW] ✅ Activated and claiming clients');
       return self.clients.claim();
     })
   );
@@ -56,13 +57,19 @@ self.addEventListener('activate', (event) => {
 
 // Message event - handle download requests
 self.addEventListener('message', (event) => {
+  console.log('[SW] 📨 Received message:', event.data);
+  
   if (event.data.type === 'CACHE_MEDIA') {
-    console.log('[SW] Received cache media request for', event.data.urls.length, 'files');
+    console.log('[SW] 📥 Received cache media request for', event.data.urls.length, 'files');
     event.waitUntil(cacheMediaFiles(event.data.urls));
   } else if (event.data.type === 'GET_CACHE_STATUS') {
     event.waitUntil(getCacheStatus(event.data.urls).then(status => {
       event.ports[0].postMessage(status);
     }));
+  } else if (event.data.type === 'PING') {
+    // Simple ping to test if service worker is responding
+    console.log('[SW] 🏓 Pong! Service worker is alive');
+    event.ports[0].postMessage({ type: 'PONG', message: 'Service worker is alive' });
   }
 });
 
@@ -71,10 +78,26 @@ async function cacheMediaFiles(urls) {
   const cache = await caches.open(MEDIA_CACHE);
   const promises = urls.map(async (url) => {
     try {
-      const req = new Request(url, {mode: 'cors'});
       console.log('[SW] Caching', url);
-      const response = await fetch(req);
-      if (response.ok) {
+      
+      // Try with CORS first
+      let req = new Request(url, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      let response = await fetch(req);
+      
+      // If CORS fails, try without CORS for images
+      if (!response.ok && url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        console.log('[SW] CORS failed for image, trying no-cors mode:', url);
+        req = new Request(url, {
+          mode: 'no-cors',
+          credentials: 'omit'
+        });
+        response = await fetch(req);
+      }
+      
+      if (response.ok || response.type === 'opaque') {
         await cache.put(req, response.clone());
         console.log('[SW] Successfully cached', url);
         return { url, status: 'success' };
@@ -113,7 +136,10 @@ async function getCacheStatus(urls) {
   const cache = await caches.open(MEDIA_CACHE);
   const status = {};
   for (const url of urls) {
-    const req = new Request(url, {mode: 'cors'});
+    const req = new Request(url, {
+      mode: 'cors',
+      credentials: 'omit'
+    });
     const response = await cache.match(req);
     status[url] = !!response;
   }
@@ -124,12 +150,19 @@ async function getCacheStatus(urls) {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+  
+  console.log('[SW] Fetch event for:', request.url);
+  console.log('[SW] Request method:', request.method);
+  console.log('[SW] Request mode:', request.mode);
 
   if (isMediaRequest(request)) {
+    console.log('[SW] Handling as media request');
     event.respondWith(handleMediaRequest(request));
   } else if (isStaticRequest(request)) {
+    console.log('[SW] Handling as static request');
     event.respondWith(handleStaticRequest(request));
   } else {
+    console.log('[SW] Handling as other request');
     event.respondWith(handleOtherRequest(request));
   }
 });
@@ -137,7 +170,18 @@ self.addEventListener('fetch', (event) => {
 // Check if request is for media files
 function isMediaRequest(request) {
   const url = request.url.toLowerCase();
-  return url.match(/\.(mp3|mp4|jpg|jpeg|png|gif|webp)$/i) || url.includes('s3.us-west-1.amazonaws.com');
+  const isMediaFile = url.match(/\.(mp3|mp4|jpg|jpeg|png|gif|webp)$/i);
+  const isS3Media = url.includes('s3.us-west-1.amazonaws.com');
+  const isMediaRequest = isMediaFile || isS3Media;
+  
+  console.log('[SW] Media request check:', {
+    url: request.url,
+    isMediaFile,
+    isS3Media,
+    isMediaRequest
+  });
+  
+  return isMediaRequest;
 }
 
 // Check if request is for static files
@@ -148,27 +192,77 @@ function isStaticRequest(request) {
 
 // Handle media requests with cache-first strategy, always cache on fetch miss
 async function handleMediaRequest(request) {
-  const req = new Request(request.url, {mode: 'cors'});
+  console.log('[SW] handleMediaRequest called for:', request.url);
+  
+  // Create a consistent request object for caching
+  const req = new Request(request.url, {
+    mode: 'cors',
+    credentials: 'omit'
+  });
+  
   try {
     const cache = await caches.open(MEDIA_CACHE);
+    console.log('[SW] Checking cache for:', request.url);
+    
+    // Try to get from cache first
     const cachedResponse = await cache.match(req);
     if (cachedResponse) {
-      console.log('[SW] Serving media from cache:', request.url);
+      console.log('[SW] ✅ Serving media from cache:', request.url);
       return cachedResponse;
     }
-    // Not in cache, fetch and cache
-    console.log('[SW] Fetching media from network:', request.url);
-    const networkResponse = await fetch(req);
-    if (networkResponse.ok) {
-      await cache.put(req, networkResponse.clone());
-      console.log('[SW] Cached media file:', request.url);
-    } else {
-      console.warn('[SW] Network response not ok for', request.url, networkResponse.status);
+    
+    console.log('[SW] ❌ Not in cache, fetching from network:', request.url);
+    
+    // Not in cache, fetch from network
+    // For images, try without CORS first, then with CORS as fallback
+    let networkResponse;
+    try {
+      networkResponse = await fetch(req);
+    } catch (corsError) {
+      console.log('[SW] CORS error, trying without CORS mode:', corsError.message);
+      // Try without CORS mode for images
+      const noCorsReq = new Request(request.url, {
+        mode: 'no-cors',
+        credentials: 'omit'
+      });
+      networkResponse = await fetch(noCorsReq);
     }
+    
+    console.log('[SW] Network response status:', networkResponse.status, 'for:', request.url);
+    
+    if (networkResponse.ok || networkResponse.type === 'opaque') {
+      // Cache the response for future use
+      await cache.put(req, networkResponse.clone());
+      console.log('[SW] ✅ Cached media file:', request.url);
+    } else {
+      console.warn('[SW] ⚠️ Network response not ok for', request.url, networkResponse.status);
+    }
+    
     return networkResponse;
   } catch (error) {
-    console.error('[SW] Error handling media request:', error);
-    return new Response('Media not available offline', { status: 404 });
+    console.error('[SW] ❌ Error handling media request:', error);
+    console.error('[SW] Error details:', {
+      url: request.url,
+      error: error.message,
+      stack: error.stack
+    });
+    
+    // Try to serve from cache as fallback even if there was an error
+    try {
+      const cache = await caches.open(MEDIA_CACHE);
+      const fallbackResponse = await cache.match(req);
+      if (fallbackResponse) {
+        console.log('[SW] ✅ Serving from cache as fallback:', request.url);
+        return fallbackResponse;
+      }
+    } catch (fallbackError) {
+      console.error('[SW] ❌ Fallback cache check also failed:', fallbackError);
+    }
+    
+    return new Response('Media not available offline', { 
+      status: 404,
+      statusText: 'Media not available offline'
+    });
   }
 }
 
