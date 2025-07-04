@@ -52,6 +52,17 @@ self.addEventListener('activate', (event) => {
     }).then(() => {
       console.log('[SW] ✅ Activated and claiming clients');
       return self.clients.claim();
+    }).then(() => {
+      console.log('[SW] ✅ Service Worker is now controlling all clients');
+      // Notify all clients that the service worker is ready
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SERVICE_WORKER_READY',
+            message: 'Service Worker is now controlling this page'
+          });
+        });
+      });
     })
   );
 });
