@@ -12,6 +12,7 @@ const STATIC_FILES = [
   '/styles.css',
   '/app.js',
   '/playlists.json',
+  '/libs/aframe-v1.7.1.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
@@ -76,6 +77,14 @@ self.addEventListener('message', (event) => {
 // Cache media files (used by download feature)
 async function cacheMediaFiles(urls) {
   const cache = await caches.open(MEDIA_CACHE);
+  console.log('[SW] Starting to cache', urls.length, 'files');
+  
+  // Log XR videos specifically
+  const xrVideos = urls.filter(url => url.includes('XR-CHAPTERS') || url.includes('XR_Scene'));
+  if (xrVideos.length > 0) {
+    console.log('[SW] XR videos to cache:', xrVideos);
+  }
+  
   const promises = urls.map(async (url) => {
     try {
       console.log('[SW] Caching', url);
@@ -87,9 +96,9 @@ async function cacheMediaFiles(urls) {
       });
       let response = await fetch(req);
       
-      // If CORS fails, try without CORS for images
-      if (!response.ok && url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-        console.log('[SW] CORS failed for image, trying no-cors mode:', url);
+      // If CORS fails, try without CORS for images and videos
+      if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.includes('XR-CHAPTERS'))) {
+        console.log('[SW] CORS failed for media, trying no-cors mode:', url);
         req = new Request(url, {
           mode: 'no-cors',
           credentials: 'omit'
@@ -116,6 +125,12 @@ async function cacheMediaFiles(urls) {
   const failedCount = results.length - successCount;
   
   console.log(`[SW] Caching complete. ${successCount} successful, ${failedCount} failed`);
+  
+  // Log XR video results specifically
+  const xrResults = results.filter(r => r.url.includes('XR-CHAPTERS') || r.url.includes('XR_Scene'));
+  if (xrResults.length > 0) {
+    console.log('[SW] XR video caching results:', xrResults);
+  }
   
   // Send progress update to main thread
   self.clients.matchAll().then(clients => {
@@ -172,12 +187,14 @@ function isMediaRequest(request) {
   const url = request.url.toLowerCase();
   const isMediaFile = url.match(/\.(mp3|mp4|jpg|jpeg|png|gif|webp)$/i);
   const isS3Media = url.includes('s3.us-west-1.amazonaws.com');
-  const isMediaRequest = isMediaFile || isS3Media;
+  const isXRVideo = url.includes('XR-CHAPTERS') || url.includes('XR_Scene');
+  const isMediaRequest = isMediaFile || isS3Media || isXRVideo;
   
   console.log('[SW] Media request check:', {
     url: request.url,
     isMediaFile,
     isS3Media,
+    isXRVideo,
     isMediaRequest
   });
   
@@ -214,13 +231,13 @@ async function handleMediaRequest(request) {
     console.log('[SW] ❌ Not in cache, fetching from network:', request.url);
     
     // Not in cache, fetch from network
-    // For images, try without CORS first, then with CORS as fallback
+    // For XR videos and other media, try with CORS first, then without CORS as fallback
     let networkResponse;
     try {
       networkResponse = await fetch(req);
     } catch (corsError) {
       console.log('[SW] CORS error, trying without CORS mode:', corsError.message);
-      // Try without CORS mode for images
+      // Try without CORS mode for images and videos
       const noCorsReq = new Request(request.url, {
         mode: 'no-cors',
         credentials: 'omit'
@@ -236,6 +253,10 @@ async function handleMediaRequest(request) {
       console.log('[SW] ✅ Cached media file:', request.url);
     } else {
       console.warn('[SW] ⚠️ Network response not ok for', request.url, networkResponse.status);
+      // For failed requests, still try to return the response to avoid breaking the app
+      if (networkResponse.status === 404) {
+        console.warn('[SW] ⚠️ 404 error for media file:', request.url);
+      }
     }
     
     return networkResponse;
@@ -257,6 +278,15 @@ async function handleMediaRequest(request) {
       }
     } catch (fallbackError) {
       console.error('[SW] ❌ Fallback cache check also failed:', fallbackError);
+    }
+    
+    // For XR videos, return a more specific error
+    if (request.url.includes('XR-CHAPTERS') || request.url.includes('XR_Scene')) {
+      console.error('[SW] ❌ XR video not available:', request.url);
+      return new Response('XR video not available offline', { 
+        status: 404,
+        statusText: 'XR video not available offline'
+      });
     }
     
     return new Response('Media not available offline', { 
