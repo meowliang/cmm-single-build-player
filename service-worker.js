@@ -12,7 +12,7 @@ const STATIC_FILES = [
   '/styles.css',
   '/app.js',
   '/playlists.json',
-  '/libs/aframe-v1.7.1.min.js',
+  '/cmm-single-build-player/libs/aframe-v1.7.1.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
