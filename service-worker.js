@@ -12,63 +12,25 @@ const STATIC_FILES = [
   '/styles.css',
   '/app.js',
   '/playlists.json',
-  // A-Frame library - ensure this path is correct
   '/cmm-single-build-player/libs/aframe-v1.7.1.min.js',
-  // Also cache the CDN version as fallback
-  'https://cdnjs.cloudflare.com/ajax/libs/aframe/1.7.1/aframe.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
-// Install event - cache static files with better error handling
+// Install event - cache static files
 self.addEventListener('install', (event) => {
   console.log('[SW] 🚀 Installing...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
         console.log('[SW] 📁 Caching static files');
-        // Cache files one by one to identify which ones fail
-        return Promise.allSettled(
-          STATIC_FILES.map(async (url) => {
-            try {
-              console.log('[SW] Caching:', url);
-              const response = await fetch(url, {
-                mode: url.startsWith('http') ? 'cors' : 'same-origin',
-                credentials: 'omit'
-              });
-              
-              if (response.ok) {
-                await cache.put(url, response);
-                console.log('[SW] ✅ Successfully cached:', url);
-              } else {
-                console.error('[SW] ❌ Failed to cache (bad response):', url, response.status);
-              }
-            } catch (error) {
-              console.error('[SW] ❌ Failed to cache (error):', url, error);
-              // For critical libraries like A-Frame, try alternative URLs
-              if (url.includes('aframe')) {
-                try {
-                  const fallbackUrl = 'https://cdnjs.cloudflare.com/ajax/libs/aframe/1.7.1/aframe.min.js';
-                  console.log('[SW] Trying A-Frame fallback:', fallbackUrl);
-                  const fallbackResponse = await fetch(fallbackUrl, { mode: 'cors', credentials: 'omit' });
-                  if (fallbackResponse.ok) {
-                    await cache.put(url, fallbackResponse); // Cache with original URL key
-                    await cache.put(fallbackUrl, fallbackResponse.clone()); // Also cache with fallback URL
-                    console.log('[SW] ✅ A-Frame fallback cached successfully');
-                  }
-                } catch (fallbackError) {
-                  console.error('[SW] ❌ A-Frame fallback also failed:', fallbackError);
-                }
-              }
-            }
-          })
-        );
+        return cache.addAll(STATIC_FILES);
       })
       .then(() => {
-        console.log('[SW] ✅ Static files caching completed');
+        console.log('[SW] ✅ Static files cached successfully');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] ❌ Error during install:', error);
+        console.error('[SW] ❌ Error caching static files:', error);
       })
   );
 });
@@ -92,6 +54,7 @@ self.addEventListener('activate', (event) => {
       return self.clients.claim();
     }).then(() => {
       console.log('[SW] ✅ Service Worker is now controlling all clients');
+      // Notify all clients that the service worker is ready
       return self.clients.matchAll().then(clients => {
         clients.forEach(client => {
           client.postMessage({
@@ -116,6 +79,7 @@ self.addEventListener('message', (event) => {
       event.ports[0].postMessage(status);
     }));
   } else if (event.data.type === 'PING') {
+    // Simple ping to test if service worker is responding
     console.log('[SW] 🏓 Pong! Service worker is alive');
     event.ports[0].postMessage({ type: 'PONG', message: 'Service worker is alive' });
   }
@@ -126,6 +90,7 @@ async function cacheMediaFiles(urls) {
   const cache = await caches.open(MEDIA_CACHE);
   console.log('[SW] Starting to cache', urls.length, 'files');
   
+  // Log XR videos specifically
   const xrVideos = urls.filter(url => url.includes('XR-CHAPTERS') || url.includes('XR_Scene'));
   if (xrVideos.length > 0) {
     console.log('[SW] XR videos to cache:', xrVideos);
@@ -135,12 +100,14 @@ async function cacheMediaFiles(urls) {
     try {
       console.log('[SW] Caching', url);
       
+      // Try with CORS first
       let req = new Request(url, {
         mode: 'cors',
         credentials: 'omit'
       });
       let response = await fetch(req);
       
+      // If CORS fails, try without CORS for images and videos
       if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.includes('XR-CHAPTERS'))) {
         console.log('[SW] CORS failed for media, trying no-cors mode:', url);
         req = new Request(url, {
@@ -170,11 +137,13 @@ async function cacheMediaFiles(urls) {
   
   console.log(`[SW] Caching complete. ${successCount} successful, ${failedCount} failed`);
   
+  // Log XR video results specifically
   const xrResults = results.filter(r => r.url.includes('XR-CHAPTERS') || r.url.includes('XR_Scene'));
   if (xrResults.length > 0) {
     console.log('[SW] XR video caching results:', xrResults);
   }
   
+  // Send progress update to main thread
   self.clients.matchAll().then(clients => {
     clients.forEach(client => {
       client.postMessage({
@@ -191,23 +160,19 @@ async function cacheMediaFiles(urls) {
 // Get cache status for URLs
 async function getCacheStatus(urls) {
   const cache = await caches.open(MEDIA_CACHE);
-  const staticCache = await caches.open(STATIC_CACHE);
   const status = {};
-  
   for (const url of urls) {
     const req = new Request(url, {
       mode: 'cors',
       credentials: 'omit'
     });
-    
-    // Check both caches
-    let response = await cache.match(req) || await staticCache.match(req);
+    const response = await cache.match(req);
     status[url] = !!response;
   }
   return status;
 }
 
-// Enhanced fetch event handler
+// Fetch event - serve from cache or network
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -216,11 +181,7 @@ self.addEventListener('fetch', (event) => {
   console.log('[SW] Request method:', request.method);
   console.log('[SW] Request mode:', request.mode);
 
-  // Special handling for A-Frame library
-  if (isAFrameRequest(request)) {
-    console.log('[SW] Handling A-Frame library request');
-    event.respondWith(handleAFrameRequest(request));
-  } else if (isMediaRequest(request)) {
+  if (isMediaRequest(request)) {
     console.log('[SW] Handling as media request');
     event.respondWith(handleMediaRequest(request));
   } else if (isStaticRequest(request)) {
@@ -231,77 +192,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(handleOtherRequest(request));
   }
 });
-
-// Check if request is for A-Frame library
-function isAFrameRequest(request) {
-  const url = request.url.toLowerCase();
-  return url.includes('aframe') && url.includes('.js');
-}
-
-// Handle A-Frame library requests
-async function handleAFrameRequest(request) {
-  console.log('[SW] handleAFrameRequest called for:', request.url);
-  
-  try {
-    const staticCache = await caches.open(STATIC_CACHE);
-    
-    // Try multiple possible URLs for A-Frame
-    const possibleUrls = [
-      request.url,
-      '/cmm-single-build-player/libs/aframe-v1.7.1.min.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/aframe/1.7.1/aframe.min.js'
-    ];
-    
-    for (const url of possibleUrls) {
-      console.log('[SW] Trying A-Frame URL:', url);
-      const req = new Request(url, {
-        mode: url.startsWith('http') ? 'cors' : 'same-origin',
-        credentials: 'omit'
-      });
-      
-      // Check cache first
-      const cachedResponse = await staticCache.match(req);
-      if (cachedResponse) {
-        console.log('[SW] ✅ Serving A-Frame from cache:', url);
-        return cachedResponse;
-      }
-    }
-    
-    // If not in cache, try to fetch
-    console.log('[SW] A-Frame not in cache, trying network');
-    for (const url of possibleUrls) {
-      try {
-        const req = new Request(url, {
-          mode: url.startsWith('http') ? 'cors' : 'same-origin',
-          credentials: 'omit'
-        });
-        
-        const response = await fetch(req);
-        if (response.ok) {
-          console.log('[SW] ✅ A-Frame fetched from network:', url);
-          // Cache it for future use
-          await staticCache.put(req, response.clone());
-          return response;
-        }
-      } catch (error) {
-        console.log('[SW] Failed to fetch A-Frame from:', url, error);
-      }
-    }
-    
-    console.error('[SW] ❌ A-Frame library not available');
-    return new Response('A-Frame library not available', { 
-      status: 404,
-      statusText: 'A-Frame library not available'
-    });
-    
-  } catch (error) {
-    console.error('[SW] ❌ Error handling A-Frame request:', error);
-    return new Response('Error loading A-Frame', { 
-      status: 500,
-      statusText: 'Error loading A-Frame'
-    });
-  }
-}
 
 // Check if request is for media files
 function isMediaRequest(request) {
@@ -328,10 +218,11 @@ function isStaticRequest(request) {
   return STATIC_FILES.includes(url.pathname) || url.origin === self.location.origin;
 }
 
-// Handle media requests with cache-first strategy
+// Handle media requests with cache-first strategy, always cache on fetch miss
 async function handleMediaRequest(request) {
   console.log('[SW] handleMediaRequest called for:', request.url);
   
+  // Create a consistent request object for caching
   const req = new Request(request.url, {
     mode: 'cors',
     credentials: 'omit'
@@ -341,6 +232,7 @@ async function handleMediaRequest(request) {
     const cache = await caches.open(MEDIA_CACHE);
     console.log('[SW] Checking cache for:', request.url);
     
+    // Try to get from cache first
     const cachedResponse = await cache.match(req);
     if (cachedResponse) {
       console.log('[SW] ✅ Serving media from cache:', request.url);
@@ -349,11 +241,14 @@ async function handleMediaRequest(request) {
     
     console.log('[SW] ❌ Not in cache, fetching from network:', request.url);
     
+    // Not in cache, fetch from network
+    // For XR videos and other media, try with CORS first, then without CORS as fallback
     let networkResponse;
     try {
       networkResponse = await fetch(req);
     } catch (corsError) {
       console.log('[SW] CORS error, trying without CORS mode:', corsError.message);
+      // Try without CORS mode for images and videos
       const noCorsReq = new Request(request.url, {
         mode: 'no-cors',
         credentials: 'omit'
@@ -364,16 +259,27 @@ async function handleMediaRequest(request) {
     console.log('[SW] Network response status:', networkResponse.status, 'for:', request.url);
     
     if (networkResponse.ok || networkResponse.type === 'opaque') {
+      // Cache the response for future use
       await cache.put(req, networkResponse.clone());
       console.log('[SW] ✅ Cached media file:', request.url);
     } else {
       console.warn('[SW] ⚠️ Network response not ok for', request.url, networkResponse.status);
+      // For failed requests, still try to return the response to avoid breaking the app
+      if (networkResponse.status === 404) {
+        console.warn('[SW] ⚠️ 404 error for media file:', request.url);
+      }
     }
     
     return networkResponse;
   } catch (error) {
     console.error('[SW] ❌ Error handling media request:', error);
+    console.error('[SW] Error details:', {
+      url: request.url,
+      error: error.message,
+      stack: error.stack
+    });
     
+    // Try to serve from cache as fallback even if there was an error
     try {
       const cache = await caches.open(MEDIA_CACHE);
       const fallbackResponse = await cache.match(req);
@@ -385,6 +291,7 @@ async function handleMediaRequest(request) {
       console.error('[SW] ❌ Fallback cache check also failed:', fallbackError);
     }
     
+    // For XR videos, return a more specific error
     if (request.url.includes('XR-CHAPTERS') || request.url.includes('XR_Scene')) {
       console.error('[SW] ❌ XR video not available:', request.url);
       return new Response('XR video not available offline', { 
@@ -439,6 +346,7 @@ self.addEventListener('sync', (event) => {
 
 async function doBackgroundSync() {
   console.log('[SW] Performing background sync...');
+  // Add any background sync logic here
 }
 
 // Handle push notifications
@@ -464,4 +372,4 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.openWindow('/')
   );
-});
+}); 
