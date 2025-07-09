@@ -311,13 +311,15 @@ async function handleMediaRequest(request) {
 async function handleStaticRequest(request) {
   try {
     const cache = await caches.open(STATIC_CACHE);
-    const cachedResponse = await cache.match(request);
+    const url = new URL(request.url);
+    // Try to match by pathname for robust static file serving
+    const cachedResponse = await cache.match(url.pathname);
     if (cachedResponse) {
       return cachedResponse;
     }
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
-      await cache.put(request, networkResponse.clone());
+      await cache.put(url.pathname, networkResponse.clone());
     }
     return networkResponse;
   } catch (error) {
