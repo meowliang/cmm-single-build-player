@@ -23,17 +23,40 @@ self.addEventListener('install', (event) => {
   console.log('[SW] 🚀 Installing...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
-      .then((cache) => {
+      .then(async (cache) => {
         console.log('[SW] 📁 Caching static files');
-        return cache.addAll(STATIC_FILES);
+        
+        // Cache files one by one to identify which ones fail
+        const results = [];
+        for (const file of STATIC_FILES) {
+          try {
+            console.log('[SW] Caching:', file);
+            await cache.add(file);
+            results.push({ file, success: true });
+            console.log('[SW] ✅ Successfully cached:', file);
+          } catch (error) {
+            console.warn('[SW] ⚠️ Failed to cache:', file, error.message);
+            results.push({ file, success: false, error: error.message });
+          }
+        }
+        
+        const successCount = results.filter(r => r.success).length;
+        const failedCount = results.filter(r => !r.success).length;
+        console.log(`[SW] 📊 Caching summary: ${successCount} successful, ${failedCount} failed`);
+        
+        if (failedCount > 0) {
+          console.warn('[SW] ⚠️ Failed to cache files:', results.filter(r => !r.success));
+        }
+        
+        return results;
       })
       .then(() => {
-        console.log('[SW] ✅ Static files cached successfully');
+        console.log('[SW] ✅ Static files caching completed');
         console.log('[SW] 🚀 Skipping waiting to activate immediately');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('[SW] ❌ Error caching static files:', error);
+        console.error('[SW] ❌ Error in static file caching:', error);
         // Still skip waiting even if some files fail to cache
         return self.skipWaiting();
       })
@@ -374,7 +397,7 @@ async function handleStaticRequest(request) {
     
     console.log('[SW] Handling static request for:', url.pathname);
     
-    // Try to match by pathname for robust static file serving
+    // Try multiple cache lookup strategies
     let cachedResponse = await cache.match(url.pathname);
     
     // Also try to match by full URL for external resources
@@ -382,31 +405,77 @@ async function handleStaticRequest(request) {
       cachedResponse = await cache.match(request.url);
     }
     
+    // For A-Frame libraries, try different variants
+    if (!cachedResponse && url.pathname.includes('/libs/aframe')) {
+      console.log('[SW] A-Frame library request, trying variants...');
+      const variants = [
+        '/cmm-single-build-player/libs/aframe-v1.7.1.min.js',
+        '/cmm-single-build-player/libs/aframe.min.js',
+        '/cmm-single-build-player/libs/aframe-master.min.js'
+      ];
+      
+      for (const variant of variants) {
+        cachedResponse = await cache.match(variant);
+        if (cachedResponse) {
+          console.log('[SW] ✅ Found A-Frame variant in cache:', variant);
+          break;
+        }
+      }
+    }
+    
     if (cachedResponse) {
       console.log('[SW] ✅ Serving static file from cache:', url.pathname);
       return cachedResponse;
     }
     
-    console.log('[SW] ❌ Static file not in cache, fetching from network:', url.pathname);
+    console.log('[SW] ❌ Static file not in cache, attempting network fetch:', url.pathname);
     
-    const networkResponse = await fetch(request);
-    if (networkResponse.ok) {
-      console.log('[SW] ✅ Caching static file:', url.pathname);
-      await cache.put(url.pathname, networkResponse.clone());
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse.ok) {
+        console.log('[SW] ✅ Network fetch successful, caching:', url.pathname);
+        await cache.put(url.pathname, networkResponse.clone());
+        return networkResponse;
+      } else {
+        console.warn('[SW] ⚠️ Network fetch failed with status:', networkResponse.status);
+        throw new Error(`Network response not ok: ${networkResponse.status}`);
+      }
+    } catch (networkError) {
+      console.error('[SW] ❌ Network fetch failed:', networkError);
+      
+      // For A-Frame libraries, this is critical - try to serve any cached A-Frame version
+      if (request.url.includes('/libs/aframe')) {
+        console.log('[SW] 🚨 A-Frame library fetch failed, trying any cached version...');
+        const aframeVariants = [
+          '/cmm-single-build-player/libs/aframe-v1.7.1.min.js',
+          '/cmm-single-build-player/libs/aframe.min.js',
+          '/cmm-single-build-player/libs/aframe-master.min.js'
+        ];
+        
+        for (const variant of aframeVariants) {
+          const fallbackResponse = await cache.match(variant);
+          if (fallbackResponse) {
+            console.log('[SW] 🔄 Serving fallback A-Frame version:', variant);
+            return fallbackResponse;
+          }
+        }
+        
+        console.error('[SW] 💀 No A-Frame library available in cache - this will break XR functionality');
+        return new Response('A-Frame library not available offline', { 
+          status: 503,
+          statusText: 'Critical library not cached'
+        });
+      }
+      
+      throw networkError;
     }
-    return networkResponse;
   } catch (error) {
     console.error('[SW] Error handling static request:', error);
     
-    // For A-Frame and other critical library files, provide a more specific error
-    if (request.url.includes('/cmm-single-build-player/libs/') && request.url.endsWith('.js')) {
-      return new Response('Critical library file not available offline', { 
-        status: 503,
-        statusText: 'Library file not cached'
-      });
-    }
-    
-    return new Response('Resource not available offline', { status: 404 });
+    return new Response('Resource not available offline', { 
+      status: 404,
+      statusText: 'Resource not found'
+    });
   }
 }
 
