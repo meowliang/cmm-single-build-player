@@ -108,21 +108,49 @@ async function cacheMediaFiles(urls) {
     try {
       console.log('[SW] Caching', url);
       
-      // Try with CORS first
-      let req = new Request(url, {
-        mode: 'cors',
-        credentials: 'omit'
-      });
-      let response = await fetch(req);
+      // Detect Safari/iOS for special handling
+      const userAgent = self.navigator.userAgent;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
       
-      // If CORS fails, try without CORS for images and videos
-      if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.includes('XR-CHAPTERS'))) {
-        console.log('[SW] CORS failed for media, trying no-cors mode:', url);
+      let req, response;
+      
+      if (isSafari || isIOS) {
+        // Safari/iOS: Try no-cors first for media files
+        console.log('[SW] Safari/iOS detected, using no-cors mode for:', url);
         req = new Request(url, {
           mode: 'no-cors',
           credentials: 'omit'
         });
+        
+        try {
+          response = await fetch(req);
+          console.log('[SW] Safari no-cors response type:', response.type);
+        } catch (noCorsError) {
+          console.log('[SW] Safari no-cors failed, trying cors mode:', noCorsError);
+          req = new Request(url, {
+            mode: 'cors',
+            credentials: 'omit'
+          });
+          response = await fetch(req);
+        }
+      } else {
+        // Other browsers: Try CORS first
+        req = new Request(url, {
+          mode: 'cors',
+          credentials: 'omit'
+        });
         response = await fetch(req);
+        
+        // If CORS fails, try without CORS for images and videos
+        if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.includes('XR-CHAPTERS'))) {
+          console.log('[SW] CORS failed for media, trying no-cors mode:', url);
+          req = new Request(url, {
+            mode: 'no-cors',
+            credentials: 'omit'
+          });
+          response = await fetch(req);
+        }
       }
       
       if (response.ok || response.type === 'opaque') {
