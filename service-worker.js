@@ -13,9 +13,10 @@ const STATIC_FILES = [
   '/app.js',
   '/playlists.json',
   '/cmm-single-build-player/libs/aframe-v1.7.1.min.js',
+  '/cmm-single-build-player/libs/aframe.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
-  '/libs/aframe.min.js',
-  '/libs/aframe-v1.7.1.min.js'
+  // '/libs/aframe.min.js',
+  // '/libs/aframe-v1.7.1.min.js'
 ];
 
 // Install event - cache static files
