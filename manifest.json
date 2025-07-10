@@ -19,12 +19,12 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/cmm-single-build-player/",
   "display": "standalone",
   "theme_color": "#667eea",
   "background_color": "#000000",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "/cmm-single-build-player/",
   "lang": "en",
   "categories": ["education", "entertainment", "travel"],
   "prefer_related_applications": false

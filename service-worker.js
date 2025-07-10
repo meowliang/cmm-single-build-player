@@ -3,19 +3,19 @@ const MEDIA_CACHE = 'cmm-media-cache-v1';
 
 // Files to cache immediately
 const STATIC_FILES = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/logo192.png',
-  '/logo512.png',
-  '/styles.css',
-  '/app.js',
-  '/playlists.json',
+  '/cmm-single-build-player/',
+  '/cmm-single-build-player/index.html',
+  '/cmm-single-build-player/manifest.json',
+  '/cmm-single-build-player/favicon.ico',
+  '/cmm-single-build-player/logo192.png',
+  '/cmm-single-build-player/logo512.png',
+  '/cmm-single-build-player/styles.css',
+  '/cmm-single-build-player/app.js',
+  '/cmm-single-build-player/playlists.json',
   '/cmm-single-build-player/libs/aframe-v1.7.1.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
-  '/libs/aframe.min.js',
-  '/libs/aframe-v1.7.1.min.js'
+  '/cmm-single-build-player/libs/aframe.min.js',
+  '/cmm-single-build-player/libs/aframe-master.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
 // Install event - cache static files
@@ -29,10 +29,13 @@ self.addEventListener('install', (event) => {
       })
       .then(() => {
         console.log('[SW] ✅ Static files cached successfully');
+        console.log('[SW] 🚀 Skipping waiting to activate immediately');
         return self.skipWaiting();
       })
       .catch((error) => {
         console.error('[SW] ❌ Error caching static files:', error);
+        // Still skip waiting even if some files fail to cache
+        return self.skipWaiting();
       })
   );
 });
@@ -58,6 +61,7 @@ self.addEventListener('activate', (event) => {
       console.log('[SW] ✅ Service Worker is now controlling all clients');
       // Notify all clients that the service worker is ready
       return self.clients.matchAll().then(clients => {
+        console.log('[SW] 📨 Notifying', clients.length, 'clients that service worker is ready');
         clients.forEach(client => {
           client.postMessage({
             type: 'SERVICE_WORKER_READY',
@@ -65,6 +69,8 @@ self.addEventListener('activate', (event) => {
           });
         });
       });
+    }).catch((error) => {
+      console.error('[SW] ❌ Error during activation:', error);
     })
   );
 });
@@ -179,6 +185,12 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
+  // Skip non-GET requests
+  if (request.method !== 'GET') {
+    console.log('[SW] Skipping non-GET request:', request.method, request.url);
+    return;
+  }
+  
   console.log('[SW] Fetch event for:', request.url);
   console.log('[SW] Request method:', request.method);
   console.log('[SW] Request mode:', request.mode);
@@ -217,7 +229,24 @@ function isMediaRequest(request) {
 // Check if request is for static files
 function isStaticRequest(request) {
   const url = new URL(request.url);
-  return STATIC_FILES.includes(url.pathname) || url.origin === self.location.origin;
+  const pathname = url.pathname;
+  
+  // Check if it's in our static files list
+  if (STATIC_FILES.includes(pathname)) {
+    return true;
+  }
+  
+  // Check if it's a JavaScript library file (like A-Frame)
+  const isLibraryFile = pathname.includes('/cmm-single-build-player/libs/') && pathname.endsWith('.js');
+  
+  // Check if it's from our origin and within our app path
+  const isSameOrigin = url.origin === self.location.origin;
+  const isAppPath = pathname.startsWith('/cmm-single-build-player/');
+  
+  // Check if it's a static asset type
+  const isStaticAsset = pathname.match(/\.(js|css|html|json|ico|png|jpg|jpeg|gif|webp|svg|ttf|woff|woff2)$/i);
+  
+  return isLibraryFile || (isSameOrigin && isAppPath && isStaticAsset);
 }
 
 // Handle media requests with cache-first strategy, always cache on fetch miss
@@ -295,16 +324,16 @@ async function handleMediaRequest(request) {
     
     // For XR videos, return a more specific error
     if (request.url.includes('XR-CHAPTERS') || request.url.includes('XR_Scene')) {
-      console.error('[SW] ❌ XR video not available:', request.url);
-      return new Response('XR video not available offline', { 
-        status: 404,
-        statusText: 'XR video not available offline'
+      console.error('[SW] ❌ XR video not available offline:', request.url);
+      return new Response('XR video not available offline. Please download content first.', { 
+        status: 503,
+        statusText: 'XR video not cached'
       });
     }
     
-    return new Response('Media not available offline', { 
-      status: 404,
-      statusText: 'Media not available offline'
+    return new Response('Media not available offline. Please download content first.', { 
+      status: 503,
+      statusText: 'Media not cached'
     });
   }
 }
@@ -314,18 +343,41 @@ async function handleStaticRequest(request) {
   try {
     const cache = await caches.open(STATIC_CACHE);
     const url = new URL(request.url);
+    
+    console.log('[SW] Handling static request for:', url.pathname);
+    
     // Try to match by pathname for robust static file serving
-    const cachedResponse = await cache.match(url.pathname);
+    let cachedResponse = await cache.match(url.pathname);
+    
+    // Also try to match by full URL for external resources
+    if (!cachedResponse) {
+      cachedResponse = await cache.match(request.url);
+    }
+    
     if (cachedResponse) {
+      console.log('[SW] ✅ Serving static file from cache:', url.pathname);
       return cachedResponse;
     }
+    
+    console.log('[SW] ❌ Static file not in cache, fetching from network:', url.pathname);
+    
     const networkResponse = await fetch(request);
     if (networkResponse.ok) {
+      console.log('[SW] ✅ Caching static file:', url.pathname);
       await cache.put(url.pathname, networkResponse.clone());
     }
     return networkResponse;
   } catch (error) {
     console.error('[SW] Error handling static request:', error);
+    
+    // For A-Frame and other critical library files, provide a more specific error
+    if (request.url.includes('/cmm-single-build-player/libs/') && request.url.endsWith('.js')) {
+      return new Response('Critical library file not available offline', { 
+        status: 503,
+        statusText: 'Library file not cached'
+      });
+    }
+    
     return new Response('Resource not available offline', { status: 404 });
   }
 }
