@@ -1,0 +1,720 @@
+{
+    "playlists": [
+        {
+        "playlist_name": "Ni de Aquí, Ni de Allá",
+        "tracks": [
+          {
+            "chapter": 1,
+            "title": "La Placita Raid",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-1.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-1.jpg",
+                  "playlist": "Ni de Aquí, Ni de Allá",
+                  "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-1-LOW-1200.mp4",
+            "duration": "1:15"
+          },
+          {
+            "chapter": 2,
+            "title": "LA Beginnings",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-2.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-2.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:03"
+          },
+          {
+            "chapter": 3,
+            "title": "Carlos Tres",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-3.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-3.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:48"
+          },
+          {
+            "chapter": 4,
+            "title": "Olde California",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-4.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-4.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:40"
+          },
+          {
+            "chapter": 5,
+            "title": "Avila Adobe",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-5.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-5.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-5-low-1200.mp4",
+            "duration": "2:30"
+          },
+          {
+            "chapter": 6,
+            "title": "Dirty Mexicans",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-6.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-6.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:50"
+          },
+          {
+            "chapter": 7,
+            "title": "Opening Night",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-04-21-DTLA-AUDIO-SHORTER/Chapter+7+Opening+Night.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-7.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:54"
+          },
+          {
+            "chapter": 7.5,
+            "title": "The Big Fiesta",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-04-21-DTLA-AUDIO-SHORTER/Chapter+7b+The+Big+Fiesta.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-7.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-21-DTLA-XR-7b-low.mp4",
+            "duration": "1:54"
+          },
+          {
+            "chapter": 8,
+            "title": "América Tropical",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-8.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-ART/2025-03-15-DTLA-ART-CH-8.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:54"
+          },
+          {
+            "chapter": 9,
+            "title": "Christine Sterling's Legacy",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-9.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-9.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "4:29"
+          },
+          {
+            "chapter": 10,
+            "title": "A Gathering Storm",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-10.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-10.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:51"
+          },
+          {
+            "chapter": 11,
+            "title": "The Raid, Reprised",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-11.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-11.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-11-LOW-1400.mp4",
+            "duration": "1:56"
+          },
+          {
+            "chapter": 12,
+            "title": "The Aftermath",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-12.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-12.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:14"
+          },
+          {
+            "chapter": 13,
+            "title": "Karla's Story, Part I",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-13.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-13+(1).jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:57"
+          },
+          {
+            "chapter": 14,
+            "title": "\"Voluntary\" Repatriation",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-14.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-14.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:22"
+          },
+          {
+            "chapter": 15,
+            "title": "Emilia's Story",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-15.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-15.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:44"
+          },
+          {
+            "chapter": 16,
+            "title": "In Union Station",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-16.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-16.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-16-low.mp4",
+            "duration": "0:48"
+          },
+          {
+            "chapter": 17,
+            "title": "Departure",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-17.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-17.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:09"
+          },
+          {
+            "chapter": 18,
+            "title": "Karla's Story, Part 2",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-18.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-18.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:03"
+          },
+          {
+            "chapter": 19,
+            "title": "Lasting Trauma",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-19.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-19.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:19"
+          },
+          {
+            "chapter": 20,
+            "title": "Ni de Aquí, Ni de Allá",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-03-15-DTLA-CH-20.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-20.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:40"
+          },
+          {
+            "chapter": 21,
+            "title": "Remembering a Buried History",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-03-15-DTLA-AUDIO/2025-04-14-DTLA-Chapter+21+Remembering+a+Buried+History.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-21.jpg",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:53"
+          },
+          {
+            "chapter": 22,
+            "title": "Thank you",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-013-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-22.png",
+            "playlist": "Ni de Aquí, Ni de Allá",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "0:48"
+          }
+        ]
+     },
+
+    {
+        "playlist_name": "Look Up",
+        "tracks": [
+          {
+            "chapter": 1,
+            "title": "Chinatown Memories",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-15-CHINATOWN-MP3S/2025-04-14-CHINATOWN-Ch-1+Chinatown+Memories.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-1.jpg",
+            "playlist": "Look Up",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "4:20"
+          },
+          {
+            "chapter": 2,
+            "title": "Look Tin Eli",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-15-CHINATOWN-MP3S/2025-04-21-SHORTER-MP3-CHAPTERS/2025-04-21-Chapter+2+Look+Tin+Eli.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-2.jpg",
+            "playlist": "Look Up",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-JAPANTOWN-XR/2025-04-21-CHINATOWN-XR-UPDATE/2025-04-21-CHINATOWN-XR-2b-low.mp4",
+            "duration": "2:04"
+          },
+          {
+            "chapter": 3,
+            "title": "Earthquake",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-003-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-3.jpg",
+            "playlist": "Look Up",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-CHINATOWN-XR-CHAPTERS/2025-04-10-CHINATOWN-XR-3-low.mp4",
+            "duration": "1:20"
+          },
+          {
+            "chapter": 4,
+            "title": "Earthquake Headlines",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-15-CHINATOWN-MP3S/2025-04-21-SHORTER-MP3-CHAPTERS/2025-04-21-Chapter+4a+Earthquake+headlines.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-4.jpg",
+            "playlist": "Look Up",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-JAPANTOWN-XR/2025-04-21-CHINATOWN-XR-UPDATE/2025-04-21-CHINATOWN-XR-4A_low.mp4",
+            "duration": "1:39"
+          },
+          {
+            "chapter": 4.5,
+            "title": "Spofford Alley",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-15-CHINATOWN-MP3S/2025-04-21-SHORTER-MP3-CHAPTERS/2025-04-21-Chapter+4b+Spofford+Alley.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-4.jpg",
+            "playlist": "Look Up",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:09"
+          },
+          {
+            "chapter": 5,
+            "title": "Chinese Beautiful",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-005-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-12-CHINATOWN-AUDIOTOUR/2025-03-12-CHINATOWN-ARTWORK/005+Chinatown+souvenirs.jpg",
+            "playlist": "Look Up",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "0:58"
+          },
+          {
+            "chapter": 6,
+            "title": "Erasing Chinatown",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-006-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-6.jpg",
+            "playlist": "Look Up",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-CHINATOWN-XR-CHAPTERS/2025-04-10-CHINATOWN-XR-6-low.mp4",
+            "duration": "2:12"
+          },
+          {
+            "chapter": 7,
+            "title": "Look Up",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-007-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-7.jpg",
+            "playlist": "Look Up",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:57"
+          },
+          {
+            "chapter": 8,
+            "title": "The Meaning of Asian American",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-008-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-8.jpg",
+            "playlist": "Look Up",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:49"
+          },
+          {
+            "chapter": 9,
+            "title": "Look Tin Eli's Plan",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-009-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-9.jpg",
+            "playlist": "Look Up",
+            "IsAR": true,
+            "XR_Scene": "",
+            "duration": "1:05"
+          },
+          {
+            "chapter": 10,
+            "title": "Securing Chinatown",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-010-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-10.jpg",
+            "playlist": "Look Up",
+            "IsAR": true,
+            "XR_Scene": "",
+            "duration": "2:48"
+          },
+          {
+            "chapter": 11,
+            "title": "Sing Chong",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-15-CHINATOWN-MP3S/2025-04-21-SHORTER-MP3-CHAPTERS/2025-04-21-Chapter+11a+Sing+Chong.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-11.jpg",
+            "playlist": "Look Up",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-JAPANTOWN-XR/2025-04-21-CHINATOWN-XR-UPDATE/2025-04-21-CHINATOWN-XR-11a-low.mp4",
+            "duration": "1:01"
+          },
+          {
+            "chapter": 11.5,
+            "title": "Sing Chong pt. 2",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-15-CHINATOWN-MP3S/2025-04-21-SHORTER-MP3-CHAPTERS/2025-04-21-Chapter+11b+Sing+Chong+2.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-11.jpg",
+            "playlist": "Look Up",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:01"
+          },
+          {
+            "chapter": 12,
+            "title": "The Spaces Between",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-012-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-12.jpg",
+            "playlist": "Look Up",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "4:52"
+          },
+          {
+            "chapter": 13,
+            "title": "Thank You",
+            "audio_url": "https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-14-CHINATOWN-AUDIO/2025-03-14-CHINATOWN-MP3S/2025-03-14-CHINATOWN-013-COMPRESSED.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-22.png",
+            "playlist": "Look Up",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "0:44"
+          }
+        ]
+    },
+
+    {
+        "playlist_name": "Returning to the Harlem of the West",
+        "tracks": [
+          {
+            "chapter": 1,
+            "title": "Return from Topaz",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-1.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH1-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "4:08:00"
+          },
+          {
+            "chapter": 2,
+            "title": "Unwelcome",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-2.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH2-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:44:00"
+          },
+          {
+            "chapter": 3,
+            "title": "410 Austin Street",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-3.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH3-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:25:00"
+          },
+          {
+            "chapter": 4,
+            "title": "Goofy Village",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-4.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH3b-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-01-JAPANTOWN-XR/2025-03-15-JAPANTOWN-CH-4-LOW.mp4",
+            "duration": "1:44:00"
+          },
+          {
+            "chapter": 5,
+            "title": "Life After War",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-5.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH4-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:39:00"
+          },
+          {
+            "chapter": 6,
+            "title": "Before the War",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-6.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH5-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "4:54:00"
+          },
+          {
+            "chapter": 7,
+            "title": "Waiting",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-7.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH6-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:39:00"
+          },
+          {
+            "chapter": 8,
+            "title": "Internment Arrives",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-8.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-04-14-JAPANTOWN-ART-RESIZED/2025-03-15-JAPANTOWN-CH6b-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-01-JAPANTOWN-XR/2025-03-15-JAPANTOWN-CH-8.mp4",
+            "duration": "2:06.00"
+          },
+          {
+            "chapter": 9,
+            "title": "Maya's Journey",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-9.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH7-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:32:00"
+          },
+          {
+            "chapter": 10,
+            "title": "The Second Great Migration",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-10.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH8-ART.png",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:54:00"
+          },
+          {
+            "chapter": 11,
+            "title": "An Uncertain Return",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-11.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH9-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:15:00"
+          },
+          {
+            "chapter": 12,
+            "title": "Hotel Kabuki",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-12.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-04-14-JAPANTOWN-ART-RESIZED/2025-03-15-JAPANTOWN-CH11-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-04-14-JAPANTOWN-ART-RESIZED/2025-03-15-JAPANTOWN-CH12-ART.jpg",
+            "duration": "0:45:00"
+          },
+          {
+            "chapter": 13,
+            "title": "The King Café",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-04-21-JAPANTOWN-SHORTER-AUDIO/Chapter+13+The+King+Cafe%CC%81.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH11-ART.gif",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-JAPANTOWN-XR/2025-04-21-JAPANTOWN-XR-SHORTER/2025-04-21-JAPANTOWN-XR-13A-low.mp4",
+            "duration": "1:00:00"
+          },
+          {
+            "chapter": 13.5,
+            "title": "Harry",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-04-21-JAPANTOWN-SHORTER-AUDIO/Chapter+13b+Harry.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH11-ART.gif",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:59:00"
+          },
+          {
+            "chapter": 14,
+            "title": "The Bulldozers Arrive",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-14.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH12-ART.png",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:30:00"
+          },
+          {
+            "chapter": 15,
+            "title": "Possibilities Lost",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-15.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH13-ART.png",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "1:21:00"
+          },
+          {
+            "chapter": 16,
+            "title": "Three Shades of Blue",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-16.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH14-ART.jpg",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": true,
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-01-JAPANTOWN-XR/2025-03-15-JAPANTOWN-CH-16.mp4",
+            "duration": "2:13:00"
+          },
+          {
+            "chapter": 17,
+            "title": "Thank You",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-MP3-AUDIO/2025-03-15-JAPANTOWN-CH-17.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-22.png",
+            "playlist": "Returning to the Harlem of the West",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "0:45:00"
+          }
+        ]
+      },
+
+      {
+        "playlist_name": "Coffee Country",
+        "tracks": [
+          {
+            "chapter": 1,
+            "title": "Arriving in the Mission",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+1+Arriving+in+the+Mission.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-01.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:01:00"
+          },
+          {
+            "chapter": 2,
+            "title": "El Salvador's Refugees",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+2+El+Salvador_s+Refugees.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-02.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:43:00"
+          },
+          {
+            "chapter": 3,
+            "title": "Placekeeping in the Mission",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+3+Placekeeping+in+San+Francisco.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-03.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:28:00"
+          },
+          {
+            "chapter": 4,
+            "title": "If Walls Could Talk",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+4+If+Walls+Could+Talk.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-04.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:57:00"
+          },
+          {
+            "chapter": 5,
+            "title": "Coffee at Temos",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+5+Coffee+at+Temos.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-05.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:58:00"
+          },
+          {
+            "chapter": 6,
+            "title": "Jorge's Journey",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+6+Jorge_s+Journey.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-06.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "8:56:00"
+          },
+          {
+            "chapter": 7,
+            "title": "Starting the Sanctuary Movement",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+7+Starting+the+Sanctuary+Movement.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-07.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "3:36:00"
+          },
+          {
+            "chapter": 8,
+            "title": "A Sanctuary City",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+8++A+Sanctuary+City.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-08.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:18:00"
+          },
+          {
+            "chapter": 9,
+            "title": "Gentrification and Eviction",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+9+Gentrification+and+Eviction.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-09.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:22:00"
+          },
+          {
+            "chapter": 10,
+            "title": "La Lucha Sigue",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+10+La+Lucha+Sigue.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-10.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:04:00"
+          },
+          {
+            "chapter": 11,
+            "title": "Neighborhood of Sun",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+11+Neighborhood+of+Sun.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-11.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:52:00"
+          },
+          {
+            "chapter": 12,
+            "title": "The Mission Family",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+12+The+Mission+Family.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-12.jpg",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "2:57:00"
+          },
+          {
+            "chapter": 13,
+            "title": "Thank You",
+            "audio_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-03-18-MISSION-MP3s/Chapter+13+Thank+You.mp3",
+            "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-18-MISSION-WALKING-TOUR/2025-04-14-MISSION-ART-RESIZED/2025-03-18-MISSION-ART-13.png",
+            "playlist": "Coffee Country",
+            "IsAR": false,
+            "XR_Scene": "",
+            "duration": "0:45:00"
+          }
+        ]
+      }
+
+
+]
+
+}

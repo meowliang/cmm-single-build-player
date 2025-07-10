@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'cmm-static-v1';
+const STATIC_CACHE = 'cmm-static-v2';
 const MEDIA_CACHE = 'cmm-media-cache-v1';
 
 // Files to cache immediately
