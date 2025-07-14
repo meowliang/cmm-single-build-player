@@ -138,11 +138,11 @@ async function openLargeFileDB() {
 
 async function storeLargeFile(url, response) {
   try {
-    const db = await openLargeFileDB();
-    const transaction = db.transaction([LARGE_FILE_STORE], 'readwrite');
-    const store = transaction.objectStore(LARGE_FILE_STORE);
-    
+    // Read the response data first, outside of any transaction
+    console.log('[SW] Reading response data for', url);
     const arrayBuffer = await response.arrayBuffer();
+    console.log('[SW] Response data read, size:', arrayBuffer.byteLength, 'bytes');
+    
     const fileData = {
       url,
       data: arrayBuffer,
@@ -152,10 +152,37 @@ async function storeLargeFile(url, response) {
       timestamp: Date.now()
     };
     
+    // Open database and create transaction after data is ready
+    const db = await openLargeFileDB();
+    
     return new Promise((resolve, reject) => {
+      // Create transaction only when ready to store
+      const transaction = db.transaction([LARGE_FILE_STORE], 'readwrite');
+      const store = transaction.objectStore(LARGE_FILE_STORE);
+      
+      // Set up transaction event handlers
+      transaction.onerror = () => {
+        console.error('[SW] Transaction error for', url, transaction.error);
+        reject(transaction.error);
+      };
+      
+      transaction.onabort = () => {
+        console.error('[SW] Transaction aborted for', url);
+        reject(new Error('Transaction aborted'));
+      };
+      
+      // Store the data
       const request = store.put(fileData, url);
-      request.onsuccess = () => resolve(true);
-      request.onerror = () => reject(request.error);
+      
+      request.onsuccess = () => {
+        console.log('[SW] Successfully stored in IndexedDB:', url);
+        resolve(true);
+      };
+      
+      request.onerror = () => {
+        console.error('[SW] Put request error for', url, request.error);
+        reject(request.error);
+      };
     });
   } catch (error) {
     console.error('[SW] Error storing large file in IndexedDB:', error);
