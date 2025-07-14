@@ -169,11 +169,21 @@ async function cacheMediaFiles(urls) {
           mode: 'cors',
           credentials: 'omit'
         });
-        response = await fetch(req);
         
-        // If CORS fails, try without CORS for images and videos
-        if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.toLowerCase().includes('xr-chapters'))) {
-          console.log('[SW] CORS failed for media, trying no-cors mode:', url);
+        try {
+          response = await fetch(req);
+          
+          // If CORS fails, try without CORS for images and videos
+          if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.toLowerCase().includes('xr-chapters'))) {
+            console.log('[SW] CORS response not ok, trying no-cors mode:', url, 'Status:', response.status);
+            req = new Request(url, {
+              mode: 'no-cors',
+              credentials: 'omit'
+            });
+            response = await fetch(req);
+          }
+        } catch (corsError) {
+          console.log('[SW] CORS fetch failed, trying no-cors mode:', corsError.message);
           req = new Request(url, {
             mode: 'no-cors',
             credentials: 'omit'
@@ -183,10 +193,16 @@ async function cacheMediaFiles(urls) {
       }
       
       if (response.ok || response.type === 'opaque') {
-        await cache.put(req, response.clone());
-        console.log('[SW] Successfully cached', url);
-        results.push({ url, status: 'success' });
-        successCount++;
+        try {
+          await cache.put(url, response.clone());
+          console.log('[SW] Successfully cached', url);
+          results.push({ url, status: 'success' });
+          successCount++;
+        } catch (cacheError) {
+          console.log('[SW] Cache storage error for', url, cacheError);
+          results.push({ url, status: 'cache_error', error: cacheError.message });
+          failedCount++;
+        }
       } else {
         console.log('[SW] Failed to cache', url, 'Status:', response.status);
         results.push({ url, status: 'failed', error: response.status });
@@ -375,7 +391,11 @@ async function handleMediaRequest(request) {
     // For XR videos and other media, try with CORS first, then without CORS as fallback
     let networkResponse;
     try {
-      networkResponse = await fetch(req);
+      const corsReq = new Request(request.url, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      networkResponse = await fetch(corsReq);
     } catch (corsError) {
       console.log('[SW] CORS error, trying without CORS mode:', corsError.message);
       // Try without CORS mode for images and videos
