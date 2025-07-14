@@ -183,6 +183,16 @@ async function cacheMediaFiles(urls) {
       }
       
       if (response.ok || response.type === 'opaque') {
+        // Debug logging for problematic responses
+        console.log('[SW] Response details for', url, ':', {
+          status: response.status,
+          statusText: response.statusText,
+          type: response.type,
+          ok: response.ok,
+          bodyUsed: response.bodyUsed,
+          headers: response.headers ? Object.fromEntries(response.headers.entries()) : 'No headers'
+        });
+        
         try {
           // For opaque responses, create a simple Request object for caching
           const cacheRequest = response.type === 'opaque' ? new Request(url) : req;
@@ -192,21 +202,52 @@ async function cacheMediaFiles(urls) {
           successCount++;
         } catch (cacheError) {
           console.log('[SW] Cache put failed for', url, 'Error:', cacheError);
-          // Try alternative caching approach for opaque responses
-          if (response.type === 'opaque') {
+          console.log('[SW] Response body used?', response.bodyUsed);
+          console.log('[SW] Response readable?', response.body && response.body.readable);
+          
+          // Try multiple alternative caching approaches
+          let cached = false;
+          
+          // Attempt 1: Try with a fresh fetch and simple request
+          if (!cached) {
             try {
-              console.log('[SW] Trying alternative cache method for opaque response:', url);
-              const simpleRequest = new Request(url, { mode: 'no-cors' });
-              await cache.put(simpleRequest, response.clone());
-              console.log('[SW] Alternative cache method succeeded for', url);
+              console.log('[SW] Attempt 1: Fresh fetch with simple request for', url);
+              const freshResponse = await fetch(url, { mode: 'no-cors' });
+              const simpleRequest = new Request(url);
+              await cache.put(simpleRequest, freshResponse);
+              console.log('[SW] Fresh fetch cache method succeeded for', url);
               results.push({ url, status: 'success' });
               successCount++;
-            } catch (altCacheError) {
-              console.log('[SW] Alternative cache method also failed for', url, 'Error:', altCacheError);
-              results.push({ url, status: 'failed', error: cacheError.message });
-              failedCount++;
+              cached = true;
+            } catch (freshError) {
+              console.log('[SW] Fresh fetch method failed for', url, 'Error:', freshError);
             }
-          } else {
+          }
+          
+          // Attempt 2: Try with manual Response construction
+          if (!cached) {
+            try {
+              console.log('[SW] Attempt 2: Manual response construction for', url);
+              const arrayBuffer = await response.clone().arrayBuffer();
+              const manualResponse = new Response(arrayBuffer, {
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+              });
+              const simpleRequest = new Request(url);
+              await cache.put(simpleRequest, manualResponse);
+              console.log('[SW] Manual response construction succeeded for', url);
+              results.push({ url, status: 'success' });
+              successCount++;
+              cached = true;
+            } catch (manualError) {
+              console.log('[SW] Manual response construction failed for', url, 'Error:', manualError);
+            }
+          }
+          
+          // If all attempts failed
+          if (!cached) {
+            console.log('[SW] All caching attempts failed for', url);
             results.push({ url, status: 'failed', error: cacheError.message });
             failedCount++;
           }
@@ -410,16 +451,46 @@ async function handleMediaRequest(request) {
         console.log('[SW] ✅ Cached media file:', request.url);
       } catch (cacheError) {
         console.log('[SW] Cache put failed for', request.url, 'Error:', cacheError);
-        // Try alternative caching approach for opaque responses
-        if (networkResponse.type === 'opaque') {
+        console.log('[SW] Response details:', {
+          status: networkResponse.status,
+          type: networkResponse.type,
+          bodyUsed: networkResponse.bodyUsed
+        });
+        
+        // Try multiple alternative caching approaches
+        let cached = false;
+        
+        // Attempt 1: Try with a fresh fetch and simple request
+        if (!cached) {
           try {
-            console.log('[SW] Trying alternative cache method for opaque response:', request.url);
-            const simpleRequest = new Request(request.url, { mode: 'no-cors' });
-            await cache.put(simpleRequest, networkResponse.clone());
-            console.log('[SW] Alternative cache method succeeded for', request.url);
-          } catch (altCacheError) {
-            console.log('[SW] Alternative cache method also failed for', request.url, 'Error:', altCacheError);
+            console.log('[SW] Attempt 1: Fresh fetch with simple request for', request.url);
+            const freshResponse = await fetch(request.url, { mode: 'no-cors' });
+            const simpleRequest = new Request(request.url);
+            await cache.put(simpleRequest, freshResponse);
+            console.log('[SW] Fresh fetch cache method succeeded for', request.url);
+            cached = true;
+          } catch (freshError) {
+            console.log('[SW] Fresh fetch method failed for', request.url, 'Error:', freshError);
           }
+        }
+        
+        // Attempt 2: Try with manual Response construction
+        if (!cached && networkResponse.type === 'opaque') {
+          try {
+            console.log('[SW] Attempt 2: Manual response construction for', request.url);
+            const arrayBuffer = await networkResponse.clone().arrayBuffer();
+            const manualResponse = new Response(arrayBuffer);
+            const simpleRequest = new Request(request.url);
+            await cache.put(simpleRequest, manualResponse);
+            console.log('[SW] Manual response construction succeeded for', request.url);
+            cached = true;
+          } catch (manualError) {
+            console.log('[SW] Manual response construction failed for', request.url, 'Error:', manualError);
+          }
+        }
+        
+        if (!cached) {
+          console.log('[SW] All caching attempts failed for', request.url);
         }
       }
     } else {
