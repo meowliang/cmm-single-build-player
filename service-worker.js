@@ -183,10 +183,34 @@ async function cacheMediaFiles(urls) {
       }
       
       if (response.ok || response.type === 'opaque') {
-        await cache.put(req, response.clone());
-        console.log('[SW] Successfully cached', url);
-        results.push({ url, status: 'success' });
-        successCount++;
+        try {
+          // For opaque responses, create a simple Request object for caching
+          const cacheRequest = response.type === 'opaque' ? new Request(url) : req;
+          await cache.put(cacheRequest, response.clone());
+          console.log('[SW] Successfully cached', url);
+          results.push({ url, status: 'success' });
+          successCount++;
+        } catch (cacheError) {
+          console.log('[SW] Cache put failed for', url, 'Error:', cacheError);
+          // Try alternative caching approach for opaque responses
+          if (response.type === 'opaque') {
+            try {
+              console.log('[SW] Trying alternative cache method for opaque response:', url);
+              const simpleRequest = new Request(url, { mode: 'no-cors' });
+              await cache.put(simpleRequest, response.clone());
+              console.log('[SW] Alternative cache method succeeded for', url);
+              results.push({ url, status: 'success' });
+              successCount++;
+            } catch (altCacheError) {
+              console.log('[SW] Alternative cache method also failed for', url, 'Error:', altCacheError);
+              results.push({ url, status: 'failed', error: cacheError.message });
+              failedCount++;
+            }
+          } else {
+            results.push({ url, status: 'failed', error: cacheError.message });
+            failedCount++;
+          }
+        }
       } else {
         console.log('[SW] Failed to cache', url, 'Status:', response.status);
         results.push({ url, status: 'failed', error: response.status });
@@ -335,8 +359,24 @@ async function handleMediaRequest(request) {
     const cache = await caches.open(MEDIA_CACHE);
     console.log('[SW] Checking cache for:', request.url);
     
-    // Try to get from cache first
-    const cachedResponse = await cache.match(req);
+    // Try to get from cache first - check multiple request variations
+    let cachedResponse = await cache.match(req);
+    
+    // If not found with CORS request, try with no-cors request
+    if (!cachedResponse) {
+      const noCorsReq = new Request(request.url, {
+        mode: 'no-cors',
+        credentials: 'omit'
+      });
+      cachedResponse = await cache.match(noCorsReq);
+    }
+    
+    // If still not found, try with simple request
+    if (!cachedResponse) {
+      const simpleReq = new Request(request.url);
+      cachedResponse = await cache.match(simpleReq);
+    }
+    
     if (cachedResponse) {
       console.log('[SW] ✅ Serving media from cache:', request.url);
       return cachedResponse;
@@ -363,8 +403,25 @@ async function handleMediaRequest(request) {
     
     if (networkResponse.ok || networkResponse.type === 'opaque') {
       // Cache the response for future use
-      await cache.put(req, networkResponse.clone());
-      console.log('[SW] ✅ Cached media file:', request.url);
+      try {
+        // For opaque responses, create a simple Request object for caching
+        const cacheRequest = networkResponse.type === 'opaque' ? new Request(request.url) : req;
+        await cache.put(cacheRequest, networkResponse.clone());
+        console.log('[SW] ✅ Cached media file:', request.url);
+      } catch (cacheError) {
+        console.log('[SW] Cache put failed for', request.url, 'Error:', cacheError);
+        // Try alternative caching approach for opaque responses
+        if (networkResponse.type === 'opaque') {
+          try {
+            console.log('[SW] Trying alternative cache method for opaque response:', request.url);
+            const simpleRequest = new Request(request.url, { mode: 'no-cors' });
+            await cache.put(simpleRequest, networkResponse.clone());
+            console.log('[SW] Alternative cache method succeeded for', request.url);
+          } catch (altCacheError) {
+            console.log('[SW] Alternative cache method also failed for', request.url, 'Error:', altCacheError);
+          }
+        }
+      }
     } else {
       console.warn('[SW] ⚠️ Network response not ok for', request.url, networkResponse.status);
       // For failed requests, still try to return the response to avoid breaking the app
