@@ -122,12 +122,18 @@ async function cacheMediaFiles(urls) {
   console.log('[SW] Starting to cache', urls.length, 'files');
   
   // Log XR videos specifically
-  const xrVideos = urls.filter(url => url.includes('XR-CHAPTERS') || url.includes('XR_Scene'));
+  const xrVideos = urls.filter(url => url.toLowerCase().includes('xr-chapters') || url.toLowerCase().includes('xr_scene'));
   if (xrVideos.length > 0) {
     console.log('[SW] XR videos to cache:', xrVideos);
   }
   
-  const promises = urls.map(async (url) => {
+  const results = [];
+  let successCount = 0;
+  let failedCount = 0;
+
+  // Process files sequentially to provide real-time progress updates
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
     try {
       console.log('[SW] Caching', url);
       
@@ -166,7 +172,7 @@ async function cacheMediaFiles(urls) {
         response = await fetch(req);
         
         // If CORS fails, try without CORS for images and videos
-        if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.includes('XR-CHAPTERS'))) {
+        if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.toLowerCase().includes('xr-chapters'))) {
           console.log('[SW] CORS failed for media, trying no-cors mode:', url);
           req = new Request(url, {
             mode: 'no-cors',
@@ -179,34 +185,49 @@ async function cacheMediaFiles(urls) {
       if (response.ok || response.type === 'opaque') {
         await cache.put(req, response.clone());
         console.log('[SW] Successfully cached', url);
-        return { url, status: 'success' };
+        results.push({ url, status: 'success' });
+        successCount++;
       } else {
         console.log('[SW] Failed to cache', url, 'Status:', response.status);
-        return { url, status: 'failed', error: response.status };
+        results.push({ url, status: 'failed', error: response.status });
+        failedCount++;
       }
     } catch (error) {
       console.log('[SW] Error caching', url, error);
-      return { url, status: 'error', error: error.message };
+      results.push({ url, status: 'error', error: error.message });
+      failedCount++;
     }
-  });
 
-  const results = await Promise.all(promises);
-  const successCount = results.filter(r => r.status === 'success').length;
-  const failedCount = results.length - successCount;
-  
+    // Send progress update after each file
+    const completedCount = successCount + failedCount;
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CACHE_PROGRESS',
+          results: results.slice(), // Send copy of current results
+          total: urls.length,
+          successCount,
+          failedCount,
+          completedCount,
+          currentFile: i + 1
+        });
+      });
+    });
+  }
+
   console.log(`[SW] Caching complete. ${successCount} successful, ${failedCount} failed`);
   
   // Log XR video results specifically
-  const xrResults = results.filter(r => r.url.includes('XR-CHAPTERS') || r.url.includes('XR_Scene'));
+  const xrResults = results.filter(r => r.url.toLowerCase().includes('xr-chapters') || r.url.toLowerCase().includes('xr_scene'));
   if (xrResults.length > 0) {
     console.log('[SW] XR video caching results:', xrResults);
   }
   
-  // Send progress update to main thread
+  // Send final completion message
   self.clients.matchAll().then(clients => {
     clients.forEach(client => {
       client.postMessage({
-        type: 'CACHE_PROGRESS',
+        type: 'CACHE_COMPLETE',
         results,
         total: urls.length,
         successCount,
@@ -221,11 +242,25 @@ async function getCacheStatus(urls) {
   const cache = await caches.open(MEDIA_CACHE);
   const status = {};
   for (const url of urls) {
-    const req = new Request(url, {
-      mode: 'cors',
-      credentials: 'omit'
-    });
-    const response = await cache.match(req);
+    // Try multiple cache lookup variants
+    let response = await cache.match(url);
+    
+    if (!response) {
+      const corsReq = new Request(url, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      response = await cache.match(corsReq);
+    }
+    
+    if (!response) {
+      const noCorsReq = new Request(url, {
+        mode: 'no-cors',
+        credentials: 'omit'
+      });
+      response = await cache.match(noCorsReq);
+    }
+    
     status[url] = !!response;
   }
   return status;
@@ -263,7 +298,7 @@ function isMediaRequest(request) {
   const url = request.url.toLowerCase();
   const isMediaFile = url.match(/\.(mp3|mp4|jpg|jpeg|png|gif|webp)$/i);
   const isS3Media = url.includes('s3.us-west-1.amazonaws.com');
-  const isXRVideo = url.includes('XR-CHAPTERS') || url.includes('XR_Scene');
+  const isXRVideo = url.includes('xr-chapters') || url.includes('xr_scene');
   const isMediaRequest = isMediaFile || isS3Media || isXRVideo;
   
   console.log('[SW] Media request check:', {
@@ -304,18 +339,31 @@ function isStaticRequest(request) {
 async function handleMediaRequest(request) {
   console.log('[SW] handleMediaRequest called for:', request.url);
   
-  // Create a consistent request object for caching
-  const req = new Request(request.url, {
-    mode: 'cors',
-    credentials: 'omit'
-  });
-  
   try {
     const cache = await caches.open(MEDIA_CACHE);
     console.log('[SW] Checking cache for:', request.url);
     
-    // Try to get from cache first
-    const cachedResponse = await cache.match(req);
+    // Try to get from cache first - try multiple request variants
+    let cachedResponse = await cache.match(request.url);
+    
+    if (!cachedResponse) {
+      // Try with cors mode
+      const corsReq = new Request(request.url, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      cachedResponse = await cache.match(corsReq);
+    }
+    
+    if (!cachedResponse) {
+      // Try with no-cors mode
+      const noCorsReq = new Request(request.url, {
+        mode: 'no-cors',
+        credentials: 'omit'
+      });
+      cachedResponse = await cache.match(noCorsReq);
+    }
+    
     if (cachedResponse) {
       console.log('[SW] ✅ Serving media from cache:', request.url);
       return cachedResponse;
@@ -340,17 +388,17 @@ async function handleMediaRequest(request) {
     
     console.log('[SW] Network response status:', networkResponse.status, 'for:', request.url);
     
-    if (networkResponse.ok || networkResponse.type === 'opaque') {
-      // Cache the response for future use
-      await cache.put(req, networkResponse.clone());
-      console.log('[SW] ✅ Cached media file:', request.url);
-    } else {
-      console.warn('[SW] ⚠️ Network response not ok for', request.url, networkResponse.status);
-      // For failed requests, still try to return the response to avoid breaking the app
-      if (networkResponse.status === 404) {
-        console.warn('[SW] ⚠️ 404 error for media file:', request.url);
+          if (networkResponse.ok || networkResponse.type === 'opaque') {
+        // Cache the response for future use - use the URL as key for consistent lookup
+        await cache.put(request.url, networkResponse.clone());
+        console.log('[SW] ✅ Cached media file:', request.url);
+      } else {
+        console.warn('[SW] ⚠️ Network response not ok for', request.url, networkResponse.status);
+        // For failed requests, still try to return the response to avoid breaking the app
+        if (networkResponse.status === 404) {
+          console.warn('[SW] ⚠️ 404 error for media file:', request.url);
+        }
       }
-    }
     
     return networkResponse;
   } catch (error) {
@@ -364,7 +412,26 @@ async function handleMediaRequest(request) {
     // Try to serve from cache as fallback even if there was an error
     try {
       const cache = await caches.open(MEDIA_CACHE);
-      const fallbackResponse = await cache.match(req);
+      
+      // Try multiple cache lookup variants
+      let fallbackResponse = await cache.match(request.url);
+      
+      if (!fallbackResponse) {
+        const corsReq = new Request(request.url, {
+          mode: 'cors',
+          credentials: 'omit'
+        });
+        fallbackResponse = await cache.match(corsReq);
+      }
+      
+      if (!fallbackResponse) {
+        const noCorsReq = new Request(request.url, {
+          mode: 'no-cors',
+          credentials: 'omit'
+        });
+        fallbackResponse = await cache.match(noCorsReq);
+      }
+      
       if (fallbackResponse) {
         console.log('[SW] ✅ Serving from cache as fallback:', request.url);
         return fallbackResponse;
@@ -373,14 +440,14 @@ async function handleMediaRequest(request) {
       console.error('[SW] ❌ Fallback cache check also failed:', fallbackError);
     }
     
-    // For XR videos, return a more specific error
-    if (request.url.includes('XR-CHAPTERS') || request.url.includes('XR_Scene')) {
-      console.error('[SW] ❌ XR video not available offline:', request.url);
-      return new Response('XR video not available offline. Please download content first.', { 
-        status: 503,
-        statusText: 'XR video not cached'
-      });
-    }
+          // For XR videos, return a more specific error
+      if (request.url.toLowerCase().includes('xr-chapters') || request.url.toLowerCase().includes('xr_scene')) {
+        console.error('[SW] ❌ XR video not available offline:', request.url);
+        return new Response('XR video not available offline. Please download content first.', { 
+          status: 503,
+          statusText: 'XR video not cached'
+        });
+      }
     
     return new Response('Media not available offline. Please download content first.', { 
       status: 503,
