@@ -122,7 +122,7 @@ async function cacheMediaFiles(urls) {
   console.log('[SW] Starting to cache', urls.length, 'files');
   
   // Log XR videos specifically
-  const xrVideos = urls.filter(url => url.includes('XR-CHAPTERS') || url.includes('XR_Scene'));
+  const xrVideos = urls.filter(url => url.toLowerCase().includes('xr-chapters') || url.toLowerCase().includes('xr_scene'));
   if (xrVideos.length > 0) {
     console.log('[SW] XR videos to cache:', xrVideos);
   }
@@ -172,7 +172,7 @@ async function cacheMediaFiles(urls) {
         response = await fetch(req);
         
         // If CORS fails, try without CORS for images and videos
-        if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.includes('XR-CHAPTERS'))) {
+        if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.toLowerCase().includes('xr-chapters'))) {
           console.log('[SW] CORS failed for media, trying no-cors mode:', url);
           req = new Request(url, {
             mode: 'no-cors',
@@ -218,7 +218,7 @@ async function cacheMediaFiles(urls) {
   console.log(`[SW] Caching complete. ${successCount} successful, ${failedCount} failed`);
   
   // Log XR video results specifically
-  const xrResults = results.filter(r => r.url.includes('XR-CHAPTERS') || r.url.includes('XR_Scene'));
+  const xrResults = results.filter(r => r.url.toLowerCase().includes('xr-chapters') || r.url.toLowerCase().includes('xr_scene'));
   if (xrResults.length > 0) {
     console.log('[SW] XR video caching results:', xrResults);
   }
@@ -284,7 +284,7 @@ function isMediaRequest(request) {
   const url = request.url.toLowerCase();
   const isMediaFile = url.match(/\.(mp3|mp4|jpg|jpeg|png|gif|webp)$/i);
   const isS3Media = url.includes('s3.us-west-1.amazonaws.com');
-  const isXRVideo = url.includes('XR-CHAPTERS') || url.includes('XR_Scene');
+  const isXRVideo = url.includes('xr-chapters') || url.includes('xr_scene');
   const isMediaRequest = isMediaFile || isS3Media || isXRVideo;
   
   console.log('[SW] Media request check:', {
@@ -395,7 +395,7 @@ async function handleMediaRequest(request) {
     }
     
     // For XR videos, return a more specific error
-    if (request.url.includes('XR-CHAPTERS') || request.url.includes('XR_Scene')) {
+    if (request.url.toLowerCase().includes('xr-chapters') || request.url.toLowerCase().includes('xr_scene')) {
       console.error('[SW] ❌ XR video not available offline:', request.url);
       return new Response('XR video not available offline. Please download content first.', { 
         status: 503,
