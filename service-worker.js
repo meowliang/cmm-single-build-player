@@ -1,5 +1,8 @@
 const STATIC_CACHE = 'cmm-static-v2';
 const MEDIA_CACHE = 'cmm-media-cache-v1';
+const LARGE_FILE_DB = 'cmm-large-files-db';
+const LARGE_FILE_STORE = 'large-files';
+const LARGE_FILE_THRESHOLD = 50 * 1024 * 1024; // 50MB threshold
 
 // Files to cache immediately
 const STATIC_FILES = [
@@ -116,6 +119,96 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// IndexedDB helper functions for large files
+async function openLargeFileDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(LARGE_FILE_DB, 1);
+    
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(LARGE_FILE_STORE)) {
+        db.createObjectStore(LARGE_FILE_STORE);
+      }
+    };
+  });
+}
+
+async function storeLargeFile(url, response) {
+  try {
+    const db = await openLargeFileDB();
+    const transaction = db.transaction([LARGE_FILE_STORE], 'readwrite');
+    const store = transaction.objectStore(LARGE_FILE_STORE);
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const fileData = {
+      url,
+      data: arrayBuffer,
+      headers: Object.fromEntries(response.headers.entries()),
+      status: response.status,
+      statusText: response.statusText,
+      timestamp: Date.now()
+    };
+    
+    return new Promise((resolve, reject) => {
+      const request = store.put(fileData, url);
+      request.onsuccess = () => resolve(true);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error('[SW] Error storing large file in IndexedDB:', error);
+    throw error;
+  }
+}
+
+async function getLargeFile(url) {
+  try {
+    const db = await openLargeFileDB();
+    const transaction = db.transaction([LARGE_FILE_STORE], 'readonly');
+    const store = transaction.objectStore(LARGE_FILE_STORE);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.get(url);
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          const response = new Response(result.data, {
+            status: result.status,
+            statusText: result.statusText,
+            headers: new Headers(result.headers)
+          });
+          resolve(response);
+        } else {
+          resolve(null);
+        }
+      };
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error('[SW] Error getting large file from IndexedDB:', error);
+    return null;
+  }
+}
+
+async function hasLargeFile(url) {
+  try {
+    const db = await openLargeFileDB();
+    const transaction = db.transaction([LARGE_FILE_STORE], 'readonly');
+    const store = transaction.objectStore(LARGE_FILE_STORE);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.get(url);
+      request.onsuccess = () => resolve(!!request.result);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (error) {
+    console.error('[SW] Error checking large file in IndexedDB:', error);
+    return false;
+  }
+}
+
 // Cache media files (used by download feature)
 async function cacheMediaFiles(urls) {
   const cache = await caches.open(MEDIA_CACHE);
@@ -183,73 +276,58 @@ async function cacheMediaFiles(urls) {
       }
       
       if (response.ok || response.type === 'opaque') {
-        // Debug logging for problematic responses
+        // Check file size to determine storage method
+        const contentLength = response.headers.get('content-length');
+        const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
+        const isLargeFile = fileSize > LARGE_FILE_THRESHOLD;
+        
         console.log('[SW] Response details for', url, ':', {
           status: response.status,
           statusText: response.statusText,
           type: response.type,
           ok: response.ok,
           bodyUsed: response.bodyUsed,
+          fileSize: fileSize,
+          isLargeFile: isLargeFile,
           headers: response.headers ? Object.fromEntries(response.headers.entries()) : 'No headers'
         });
         
-        try {
-          // For opaque responses, create a simple Request object for caching
-          const cacheRequest = response.type === 'opaque' ? new Request(url) : req;
-          await cache.put(cacheRequest, response.clone());
-          console.log('[SW] Successfully cached', url);
-          results.push({ url, status: 'success' });
-          successCount++;
-        } catch (cacheError) {
-          console.log('[SW] Cache put failed for', url, 'Error:', cacheError);
-          console.log('[SW] Response body used?', response.bodyUsed);
-          console.log('[SW] Response readable?', response.body && response.body.readable);
-          
-          // Try multiple alternative caching approaches
-          let cached = false;
-          
-          // Attempt 1: Try with a fresh fetch and simple request
-          if (!cached) {
-            try {
-              console.log('[SW] Attempt 1: Fresh fetch with simple request for', url);
-              const freshResponse = await fetch(url, { mode: 'no-cors' });
-              const simpleRequest = new Request(url);
-              await cache.put(simpleRequest, freshResponse);
-              console.log('[SW] Fresh fetch cache method succeeded for', url);
-              results.push({ url, status: 'success' });
-              successCount++;
-              cached = true;
-            } catch (freshError) {
-              console.log('[SW] Fresh fetch method failed for', url, 'Error:', freshError);
-            }
-          }
-          
-          // Attempt 2: Try with manual Response construction
-          if (!cached) {
-            try {
-              console.log('[SW] Attempt 2: Manual response construction for', url);
-              const arrayBuffer = await response.clone().arrayBuffer();
-              const manualResponse = new Response(arrayBuffer, {
-                status: response.status,
-                statusText: response.statusText,
-                headers: response.headers
-              });
-              const simpleRequest = new Request(url);
-              await cache.put(simpleRequest, manualResponse);
-              console.log('[SW] Manual response construction succeeded for', url);
-              results.push({ url, status: 'success' });
-              successCount++;
-              cached = true;
-            } catch (manualError) {
-              console.log('[SW] Manual response construction failed for', url, 'Error:', manualError);
-            }
-          }
-          
-          // If all attempts failed
-          if (!cached) {
-            console.log('[SW] All caching attempts failed for', url);
-            results.push({ url, status: 'failed', error: cacheError.message });
+        if (isLargeFile) {
+          // Use IndexedDB for large files
+          try {
+            console.log('[SW] Large file detected, using IndexedDB for', url);
+            await storeLargeFile(url, response.clone());
+            console.log('[SW] Successfully stored large file in IndexedDB:', url);
+            results.push({ url, status: 'success', storage: 'indexeddb' });
+            successCount++;
+          } catch (indexedDBError) {
+            console.log('[SW] IndexedDB storage failed for', url, 'Error:', indexedDBError);
+            results.push({ url, status: 'failed', error: indexedDBError.message });
             failedCount++;
+          }
+        } else {
+          // Use Cache API for smaller files
+          try {
+            const cacheRequest = response.type === 'opaque' ? new Request(url) : req;
+            await cache.put(cacheRequest, response.clone());
+            console.log('[SW] Successfully cached small file:', url);
+            results.push({ url, status: 'success', storage: 'cache' });
+            successCount++;
+          } catch (cacheError) {
+            console.log('[SW] Cache put failed for', url, 'Error:', cacheError);
+            
+            // Try IndexedDB as fallback even for smaller files
+            try {
+              console.log('[SW] Trying IndexedDB as fallback for', url);
+              await storeLargeFile(url, response.clone());
+              console.log('[SW] IndexedDB fallback succeeded for', url);
+              results.push({ url, status: 'success', storage: 'indexeddb-fallback' });
+              successCount++;
+            } catch (fallbackError) {
+              console.log('[SW] IndexedDB fallback also failed for', url, 'Error:', fallbackError);
+              results.push({ url, status: 'failed', error: cacheError.message });
+              failedCount++;
+            }
           }
         }
       } else {
@@ -306,14 +384,30 @@ async function cacheMediaFiles(urls) {
 async function getCacheStatus(urls) {
   const cache = await caches.open(MEDIA_CACHE);
   const status = {};
+  
   for (const url of urls) {
+    let isCached = false;
+    
+    // Check Cache API first
     const req = new Request(url, {
       mode: 'cors',
       credentials: 'omit'
     });
     const response = await cache.match(req);
-    status[url] = !!response;
+    
+    if (response) {
+      isCached = true;
+    } else {
+      // Check IndexedDB for large files
+      const hasLargeFileStored = await hasLargeFile(url);
+      if (hasLargeFileStored) {
+        isCached = true;
+      }
+    }
+    
+    status[url] = isCached;
   }
+  
   return status;
 }
 
@@ -423,6 +517,14 @@ async function handleMediaRequest(request) {
       return cachedResponse;
     }
     
+    // If not found in cache, check IndexedDB for large files
+    console.log('[SW] Not found in cache, checking IndexedDB for:', request.url);
+    const largeFileResponse = await getLargeFile(request.url);
+    if (largeFileResponse) {
+      console.log('[SW] ✅ Serving media from IndexedDB:', request.url);
+      return largeFileResponse;
+    }
+    
     console.log('[SW] ❌ Not in cache, fetching from network:', request.url);
     
     // Not in cache, fetch from network
@@ -443,54 +545,39 @@ async function handleMediaRequest(request) {
     console.log('[SW] Network response status:', networkResponse.status, 'for:', request.url);
     
     if (networkResponse.ok || networkResponse.type === 'opaque') {
-      // Cache the response for future use
-      try {
-        // For opaque responses, create a simple Request object for caching
-        const cacheRequest = networkResponse.type === 'opaque' ? new Request(request.url) : req;
-        await cache.put(cacheRequest, networkResponse.clone());
-        console.log('[SW] ✅ Cached media file:', request.url);
-      } catch (cacheError) {
-        console.log('[SW] Cache put failed for', request.url, 'Error:', cacheError);
-        console.log('[SW] Response details:', {
-          status: networkResponse.status,
-          type: networkResponse.type,
-          bodyUsed: networkResponse.bodyUsed
-        });
-        
-        // Try multiple alternative caching approaches
-        let cached = false;
-        
-        // Attempt 1: Try with a fresh fetch and simple request
-        if (!cached) {
-          try {
-            console.log('[SW] Attempt 1: Fresh fetch with simple request for', request.url);
-            const freshResponse = await fetch(request.url, { mode: 'no-cors' });
-            const simpleRequest = new Request(request.url);
-            await cache.put(simpleRequest, freshResponse);
-            console.log('[SW] Fresh fetch cache method succeeded for', request.url);
-            cached = true;
-          } catch (freshError) {
-            console.log('[SW] Fresh fetch method failed for', request.url, 'Error:', freshError);
-          }
+      // Check file size to determine storage method
+      const contentLength = networkResponse.headers.get('content-length');
+      const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
+      const isLargeFile = fileSize > LARGE_FILE_THRESHOLD;
+      
+      console.log('[SW] Network response for', request.url, '- Size:', fileSize, 'Large file:', isLargeFile);
+      
+      if (isLargeFile) {
+        // Use IndexedDB for large files
+        try {
+          console.log('[SW] Storing large file in IndexedDB:', request.url);
+          await storeLargeFile(request.url, networkResponse.clone());
+          console.log('[SW] ✅ Stored large file in IndexedDB:', request.url);
+        } catch (indexedDBError) {
+          console.log('[SW] IndexedDB storage failed for', request.url, 'Error:', indexedDBError);
         }
-        
-        // Attempt 2: Try with manual Response construction
-        if (!cached && networkResponse.type === 'opaque') {
+      } else {
+        // Use Cache API for smaller files
+        try {
+          const cacheRequest = networkResponse.type === 'opaque' ? new Request(request.url) : req;
+          await cache.put(cacheRequest, networkResponse.clone());
+          console.log('[SW] ✅ Cached small file:', request.url);
+        } catch (cacheError) {
+          console.log('[SW] Cache put failed for', request.url, 'Error:', cacheError);
+          
+          // Try IndexedDB as fallback even for smaller files
           try {
-            console.log('[SW] Attempt 2: Manual response construction for', request.url);
-            const arrayBuffer = await networkResponse.clone().arrayBuffer();
-            const manualResponse = new Response(arrayBuffer);
-            const simpleRequest = new Request(request.url);
-            await cache.put(simpleRequest, manualResponse);
-            console.log('[SW] Manual response construction succeeded for', request.url);
-            cached = true;
-          } catch (manualError) {
-            console.log('[SW] Manual response construction failed for', request.url, 'Error:', manualError);
+            console.log('[SW] Trying IndexedDB as fallback for', request.url);
+            await storeLargeFile(request.url, networkResponse.clone());
+            console.log('[SW] IndexedDB fallback succeeded for', request.url);
+          } catch (fallbackError) {
+            console.log('[SW] IndexedDB fallback also failed for', request.url, 'Error:', fallbackError);
           }
-        }
-        
-        if (!cached) {
-          console.log('[SW] All caching attempts failed for', request.url);
         }
       }
     } else {
