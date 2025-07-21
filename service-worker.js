@@ -257,109 +257,146 @@ async function cacheMediaFiles(urls) {
     try {
       console.log('[SW] Caching', url);
       
-      // Detect Safari/iOS for special handling
+      // Enhanced device detection for better Chrome on iPad support
       const userAgent = self.navigator.userAgent;
-      const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
       const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+      const isSafariEngine = /^((?!chrome|android).)*safari/i.test(userAgent) && !/chrome/i.test(userAgent);
+      const isChromeOnIOS = /chrome/i.test(userAgent) && isIOS;
+      const isWebKit = /webkit/i.test(userAgent);
       
+      console.log('[SW] Device detection for', url, ':', {
+        userAgent: userAgent.substring(0, 100),
+        isIOS,
+        isSafariEngine,
+        isChromeOnIOS,
+        isWebKit
+      });
+
       let req, response;
+      let cacheSuccess = false;
       
-      if (isSafari || isIOS) {
-        // Safari/iOS: Try no-cors first for media files
-        console.log('[SW] Safari/iOS detected, using no-cors mode for:', url);
-        req = new Request(url, {
-          mode: 'no-cors',
-          credentials: 'omit'
-        });
-        
-        try {
-          response = await fetch(req);
-          console.log('[SW] Safari no-cors response type:', response.type);
-        } catch (noCorsError) {
-          console.log('[SW] Safari no-cors failed, trying cors mode:', noCorsError);
-          req = new Request(url, {
+      // Enhanced fetch strategy - try multiple approaches for better compatibility
+      const fetchStrategies = [
+        // Strategy 1: Standard CORS request (works for most cases)
+        async () => {
+          console.log('[SW] Strategy 1: Standard CORS for', url);
+          return await fetch(new Request(url, {
             mode: 'cors',
-            credentials: 'omit'
-          });
-          response = await fetch(req);
-        }
-      } else {
-        // Other browsers: Try CORS first
-        req = new Request(url, {
-          mode: 'cors',
-          credentials: 'omit'
-        });
-        response = await fetch(req);
+            credentials: 'omit',
+            cache: 'no-cache'
+          }));
+        },
         
-        // If CORS fails, try without CORS for images and videos
-        if (!response.ok && (url.match(/\.(jpg|jpeg|png|gif|webp|mp4)$/i) || url.toLowerCase().includes('xr-chapters'))) {
-          console.log('[SW] CORS failed for media, trying no-cors mode:', url);
-          req = new Request(url, {
+        // Strategy 2: No-CORS for media files (iOS fallback)
+        async () => {
+          console.log('[SW] Strategy 2: No-CORS for', url);
+          return await fetch(new Request(url, {
             mode: 'no-cors',
-            credentials: 'omit'
-          });
-          response = await fetch(req);
+            credentials: 'omit',
+            cache: 'no-cache'
+          }));
+        },
+        
+        // Strategy 3: Simple fetch (basic fallback)
+        async () => {
+          console.log('[SW] Strategy 3: Simple fetch for', url);
+          return await fetch(url);
+        }
+      ];
+      
+      // For iOS devices (including Chrome on iPad), prioritize no-cors for media files
+      if (isIOS && (url.match(/\.(mp3|mp4|jpg|jpeg|png|gif|webp)$/i) || url.toLowerCase().includes('xr'))) {
+        console.log('[SW] iOS device detected, reordering strategies for media file:', url);
+        fetchStrategies.reverse(); // Try no-cors first for iOS media files
+      }
+      
+      // Try each strategy until one succeeds
+      let lastError;
+      for (const [index, strategy] of fetchStrategies.entries()) {
+        try {
+          response = await strategy();
+          
+          if (response && (response.ok || response.type === 'opaque')) {
+            console.log('[SW] ✅ Strategy', index + 1, 'succeeded for', url);
+            break;
+          } else {
+            throw new Error(`Response not ok: ${response.status}`);
+          }
+        } catch (error) {
+          console.log('[SW] ❌ Strategy', index + 1, 'failed for', url, ':', error.message);
+          lastError = error;
+          response = null;
         }
       }
       
-      if (response.ok || response.type === 'opaque') {
-        // Check file size to determine storage method
-        const contentLength = response.headers.get('content-length');
-        const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
-        const isLargeFile = fileSize > LARGE_FILE_THRESHOLD;
-        
-        console.log('[SW] Response details for', url, ':', {
-          status: response.status,
-          statusText: response.statusText,
-          type: response.type,
-          ok: response.ok,
-          bodyUsed: response.bodyUsed,
-          fileSize: fileSize,
-          isLargeFile: isLargeFile,
-          headers: response.headers ? Object.fromEntries(response.headers.entries()) : 'No headers'
-        });
-        
-        if (isLargeFile) {
-          // Use IndexedDB for large files
-          try {
-            console.log('[SW] Large file detected, using IndexedDB for', url);
-            await storeLargeFile(url, response.clone());
-            console.log('[SW] Successfully stored large file in IndexedDB:', url);
-            results.push({ url, status: 'success', storage: 'indexeddb' });
-            successCount++;
-          } catch (indexedDBError) {
-            console.log('[SW] IndexedDB storage failed for', url, 'Error:', indexedDBError);
-            results.push({ url, status: 'failed', error: indexedDBError.message });
-            failedCount++;
-          }
-        } else {
-          // Use Cache API for smaller files
-          try {
-            const cacheRequest = response.type === 'opaque' ? new Request(url) : req;
-            await cache.put(cacheRequest, response.clone());
-            console.log('[SW] Successfully cached small file:', url);
-            results.push({ url, status: 'success', storage: 'cache' });
-            successCount++;
-          } catch (cacheError) {
-            console.log('[SW] Cache put failed for', url, 'Error:', cacheError);
-            
-            // Try IndexedDB as fallback even for smaller files
+      if (!response || (!response.ok && response.type !== 'opaque')) {
+        throw lastError || new Error('All fetch strategies failed');
+      }
+      
+      // Determine storage method based on file size
+      const contentLength = response.headers.get('content-length');
+      const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
+      const isLargeFile = fileSize > LARGE_FILE_THRESHOLD;
+      
+      console.log('[SW] Response details for', url, ':', {
+        status: response.status,
+        statusText: response.statusText,
+        type: response.type,
+        ok: response.ok,
+        fileSize: fileSize,
+        isLargeFile: isLargeFile
+      });
+      
+      if (isLargeFile) {
+        // Use IndexedDB for large files
+        try {
+          console.log('[SW] Large file detected, using IndexedDB for', url);
+          await storeLargeFile(url, response.clone());
+          console.log('[SW] Successfully stored large file in IndexedDB:', url);
+          results.push({ url, status: 'success', storage: 'indexeddb' });
+          successCount++;
+          cacheSuccess = true;
+        } catch (indexedDBError) {
+          console.log('[SW] IndexedDB storage failed for', url, 'Error:', indexedDBError);
+        }
+      }
+      
+      if (!cacheSuccess) {
+        // Use Cache API for smaller files or as fallback
+        try {
+          // For opaque responses, create a simple request
+          const cacheRequest = response.type === 'opaque' ? new Request(url) : new Request(url, {
+            mode: 'cors',
+            credentials: 'omit'
+          });
+          
+          await cache.put(cacheRequest, response.clone());
+          console.log('[SW] Successfully cached file:', url);
+          results.push({ url, status: 'success', storage: 'cache' });
+          successCount++;
+          cacheSuccess = true;
+        } catch (cacheError) {
+          console.log('[SW] Cache put failed for', url, 'Error:', cacheError);
+          
+          // Try IndexedDB as final fallback
+          if (!isLargeFile) {
             try {
               console.log('[SW] Trying IndexedDB as fallback for', url);
               await storeLargeFile(url, response.clone());
               console.log('[SW] IndexedDB fallback succeeded for', url);
               results.push({ url, status: 'success', storage: 'indexeddb-fallback' });
               successCount++;
+              cacheSuccess = true;
             } catch (fallbackError) {
               console.log('[SW] IndexedDB fallback also failed for', url, 'Error:', fallbackError);
-              results.push({ url, status: 'failed', error: cacheError.message });
-              failedCount++;
             }
           }
         }
-      } else {
+      }
+      
+      if (!cacheSuccess) {
         console.log('[SW] Failed to cache', url, 'Status:', response.status);
-        results.push({ url, status: 'failed', error: response.status });
+        results.push({ url, status: 'failed', error: `Failed to store: ${response.status}` });
         failedCount++;
       }
     } catch (error) {
@@ -511,32 +548,42 @@ function isStaticRequest(request) {
 async function handleMediaRequest(request) {
   console.log('[SW] handleMediaRequest called for:', request.url);
   
-  // Create a consistent request object for caching
-  const req = new Request(request.url, {
-    mode: 'cors',
-    credentials: 'omit'
-  });
+  // Enhanced device detection for better Chrome on iPad support
+  const userAgent = self.navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+  const isChromeOnIOS = /chrome/i.test(userAgent) && isIOS;
+  
+  console.log('[SW] Device info:', { isIOS, isChromeOnIOS, userAgent: userAgent.substring(0, 100) });
   
   try {
     const cache = await caches.open(MEDIA_CACHE);
     console.log('[SW] Checking cache for:', request.url);
     
-    // Try to get from cache first - check multiple request variations
-    let cachedResponse = await cache.match(req);
+    // Enhanced cache lookup with multiple strategies for better Chrome on iPad compatibility
+    let cachedResponse = null;
+    const lookupStrategies = [
+      // Strategy 1: Direct URL match
+      () => cache.match(request.url),
+      // Strategy 2: Request object match
+      () => cache.match(request),
+      // Strategy 3: CORS request match
+      () => cache.match(new Request(request.url, { mode: 'cors', credentials: 'omit' })),
+      // Strategy 4: No-CORS request match
+      () => cache.match(new Request(request.url, { mode: 'no-cors', credentials: 'omit' })),
+      // Strategy 5: Simple request match
+      () => cache.match(new Request(request.url))
+    ];
     
-    // If not found with CORS request, try with no-cors request
-    if (!cachedResponse) {
-      const noCorsReq = new Request(request.url, {
-        mode: 'no-cors',
-        credentials: 'omit'
-      });
-      cachedResponse = await cache.match(noCorsReq);
-    }
-    
-    // If still not found, try with simple request
-    if (!cachedResponse) {
-      const simpleReq = new Request(request.url);
-      cachedResponse = await cache.match(simpleReq);
+    for (const [index, strategy] of lookupStrategies.entries()) {
+      try {
+        cachedResponse = await strategy();
+        if (cachedResponse) {
+          console.log('[SW] ✅ Found in cache using strategy', index + 1, 'for:', request.url);
+          break;
+        }
+      } catch (lookupError) {
+        console.log('[SW] Cache lookup strategy', index + 1, 'failed:', lookupError.message);
+      }
     }
     
     if (cachedResponse) {
@@ -554,23 +601,77 @@ async function handleMediaRequest(request) {
     
     console.log('[SW] ❌ Not in cache, fetching from network:', request.url);
     
-    // Not in cache, fetch from network
-    // For XR videos and other media, try with CORS first, then without CORS as fallback
+    // Enhanced network fetch strategy with multiple approaches
     let networkResponse;
-    try {
-      networkResponse = await fetch(req);
-    } catch (corsError) {
-      console.log('[SW] CORS error, trying without CORS mode:', corsError.message);
-      // Try without CORS mode for images and videos
-      const noCorsReq = new Request(request.url, {
-        mode: 'no-cors',
-        credentials: 'omit'
-      });
-      networkResponse = await fetch(noCorsReq);
+    const fetchStrategies = [
+      // Strategy 1: Standard CORS request
+      async () => {
+        console.log('[SW] Network Strategy 1: Standard CORS for', request.url);
+        return await fetch(new Request(request.url, {
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-cache'
+        }));
+      },
+      
+      // Strategy 2: No-CORS request (for iOS media files)
+      async () => {
+        console.log('[SW] Network Strategy 2: No-CORS for', request.url);
+        return await fetch(new Request(request.url, {
+          mode: 'no-cors',
+          credentials: 'omit',
+          cache: 'no-cache'
+        }));
+      },
+      
+      // Strategy 3: Original request
+      async () => {
+        console.log('[SW] Network Strategy 3: Original request for', request.url);
+        return await fetch(request);
+      },
+      
+      // Strategy 4: Simple fetch
+      async () => {
+        console.log('[SW] Network Strategy 4: Simple fetch for', request.url);
+        return await fetch(request.url);
+      }
+    ];
+    
+    // For iOS devices (including Chrome on iPad), prioritize no-cors for media files
+    if (isIOS && (request.url.match(/\.(mp3|mp4|jpg|jpeg|png|gif|webp)$/i) || request.url.toLowerCase().includes('xr'))) {
+      console.log('[SW] iOS device detected, reordering network strategies for media file:', request.url);
+      // Move no-cors strategy to the front
+      const noCorsStrategy = fetchStrategies[1];
+      fetchStrategies.splice(1, 1);
+      fetchStrategies.unshift(noCorsStrategy);
     }
     
-    console.log('[SW] Network response status:', networkResponse.status, 'for:', request.url);
+    // Try each network strategy until one succeeds
+    let lastError;
+    for (const [index, strategy] of fetchStrategies.entries()) {
+      try {
+        networkResponse = await strategy();
+        
+        if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
+          console.log('[SW] ✅ Network strategy', index + 1, 'succeeded for', request.url);
+          break;
+        } else {
+          throw new Error(`Response not ok: ${networkResponse?.status || 'unknown'}`);
+        }
+      } catch (error) {
+        console.log('[SW] ❌ Network strategy', index + 1, 'failed for', request.url, ':', error.message);
+        lastError = error;
+        networkResponse = null;
+      }
+    }
     
+    if (!networkResponse || (!networkResponse.ok && networkResponse.type !== 'opaque')) {
+      throw lastError || new Error('All network strategies failed');
+    }
+    
+    console.log('[SW] Network response status:', networkResponse.status, 'type:', networkResponse.type, 'for:', request.url);
+    
+    // Cache the response for future use
     if (networkResponse.ok || networkResponse.type === 'opaque') {
       // Check file size to determine storage method
       const contentLength = networkResponse.headers.get('content-length');
@@ -579,40 +680,73 @@ async function handleMediaRequest(request) {
       
       console.log('[SW] Network response for', request.url, '- Size:', fileSize, 'Large file:', isLargeFile);
       
+      let cacheSuccess = false;
+      
       if (isLargeFile) {
         // Use IndexedDB for large files
         try {
           console.log('[SW] Storing large file in IndexedDB:', request.url);
           await storeLargeFile(request.url, networkResponse.clone());
           console.log('[SW] ✅ Stored large file in IndexedDB:', request.url);
+          cacheSuccess = true;
         } catch (indexedDBError) {
           console.log('[SW] IndexedDB storage failed for', request.url, 'Error:', indexedDBError);
         }
-      } else {
-        // Use Cache API for smaller files
-        try {
-          const cacheRequest = networkResponse.type === 'opaque' ? new Request(request.url) : req;
-          await cache.put(cacheRequest, networkResponse.clone());
-          console.log('[SW] ✅ Cached small file:', request.url);
-        } catch (cacheError) {
-          console.log('[SW] Cache put failed for', request.url, 'Error:', cacheError);
+      }
+      
+      if (!cacheSuccess) {
+        // Use Cache API for smaller files or as fallback
+        const cacheStrategies = [
+          // Strategy 1: Cache with CORS request
+          async () => {
+            const cacheRequest = new Request(request.url, { mode: 'cors', credentials: 'omit' });
+            await cache.put(cacheRequest, networkResponse.clone());
+            console.log('[SW] ✅ Cached with CORS request:', request.url);
+          },
           
-          // Try IndexedDB as fallback even for smaller files
+          // Strategy 2: Cache with simple request (for opaque responses)
+          async () => {
+            const cacheRequest = new Request(request.url);
+            await cache.put(cacheRequest, networkResponse.clone());
+            console.log('[SW] ✅ Cached with simple request:', request.url);
+          },
+          
+          // Strategy 3: Cache with URL string
+          async () => {
+            await cache.put(request.url, networkResponse.clone());
+            console.log('[SW] ✅ Cached with URL string:', request.url);
+          }
+        ];
+        
+        // Try cache strategies
+        for (const [index, cacheStrategy] of cacheStrategies.entries()) {
           try {
-            console.log('[SW] Trying IndexedDB as fallback for', request.url);
+            await cacheStrategy();
+            cacheSuccess = true;
+            break;
+          } catch (cacheError) {
+            console.log('[SW] Cache strategy', index + 1, 'failed for', request.url, ':', cacheError.message);
+          }
+        }
+        
+        // Final fallback to IndexedDB
+        if (!cacheSuccess) {
+          try {
+            console.log('[SW] Trying IndexedDB as final fallback for', request.url);
             await storeLargeFile(request.url, networkResponse.clone());
-            console.log('[SW] IndexedDB fallback succeeded for', request.url);
+            console.log('[SW] IndexedDB final fallback succeeded for', request.url);
+            cacheSuccess = true;
           } catch (fallbackError) {
-            console.log('[SW] IndexedDB fallback also failed for', request.url, 'Error:', fallbackError);
+            console.log('[SW] IndexedDB final fallback also failed for', request.url, 'Error:', fallbackError);
           }
         }
       }
+      
+      if (!cacheSuccess) {
+        console.warn('[SW] ⚠️ Failed to cache response for future use:', request.url);
+      }
     } else {
       console.warn('[SW] ⚠️ Network response not ok for', request.url, networkResponse.status);
-      // For failed requests, still try to return the response to avoid breaking the app
-      if (networkResponse.status === 404) {
-        console.warn('[SW] ⚠️ 404 error for media file:', request.url);
-      }
     }
     
     return networkResponse;
@@ -621,16 +755,37 @@ async function handleMediaRequest(request) {
     console.error('[SW] Error details:', {
       url: request.url,
       error: error.message,
-      stack: error.stack
+      stack: error.stack?.substring(0, 500)
     });
     
-    // Try to serve from cache as fallback even if there was an error
+    // Enhanced fallback cache check
     try {
       const cache = await caches.open(MEDIA_CACHE);
-      const fallbackResponse = await cache.match(req);
-      if (fallbackResponse) {
-        console.log('[SW] ✅ Serving from cache as fallback:', request.url);
-        return fallbackResponse;
+      
+      // Try all cache lookup strategies as fallback
+      const fallbackStrategies = [
+        () => cache.match(request.url),
+        () => cache.match(request),
+        () => cache.match(new Request(request.url))
+      ];
+      
+      for (const strategy of fallbackStrategies) {
+        try {
+          const fallbackResponse = await strategy();
+          if (fallbackResponse) {
+            console.log('[SW] ✅ Serving from cache as error fallback:', request.url);
+            return fallbackResponse;
+          }
+        } catch (fallbackError) {
+          console.log('[SW] Fallback cache lookup failed:', fallbackError.message);
+        }
+      }
+      
+      // Also try IndexedDB as fallback
+      const largeFileFallback = await getLargeFile(request.url);
+      if (largeFileFallback) {
+        console.log('[SW] ✅ Serving from IndexedDB as error fallback:', request.url);
+        return largeFileFallback;
       }
     } catch (fallbackError) {
       console.error('[SW] ❌ Fallback cache check also failed:', fallbackError);
