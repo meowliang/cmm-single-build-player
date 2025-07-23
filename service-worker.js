@@ -509,168 +509,89 @@ function isStaticRequest(request) {
 async function handleMediaRequest(request) {
   console.log('[SW] handleMediaRequest called for:', request.url);
   
-  // Simple device detection
-  const userAgent = self.navigator.userAgent;
-  const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-  
-  // Fix XR video detection - consistent with cacheMediaFiles
   const lowerUrl = request.url.toLowerCase();
   const isXRVideo = lowerUrl.includes('xr-chapters') || lowerUrl.includes('xr_scene') || lowerUrl.includes('xr-src');
   
-  console.log('[SW] Device info:', { isIOS, isXRVideo });
+  console.log('[SW] Processing media request:', { url: request.url, isXRVideo });
   
   try {
     const cache = await caches.open(MEDIA_CACHE);
-    console.log('[SW] Checking cache for:', request.url);
     
-    // Check Cache API first
-    let cachedResponse = await cache.match(request.url);
+    // Enhanced cache lookup with multiple strategies
+    const lookupStrategies = [
+      () => cache.match(request.url),
+      () => cache.match(request),
+      () => cache.match(new Request(request.url)),
+      () => cache.match(new Request(request.url, { method: 'GET' }))
+    ];
     
-    if (!cachedResponse) {
-      // Try different request variations
-      cachedResponse = await cache.match(request);
+    for (const strategy of lookupStrategies) {
+      try {
+        const cachedResponse = await strategy();
+        if (cachedResponse) {
+          console.log('[SW] ✅ Serving from cache:', request.url);
+          return cachedResponse;
+        }
+      } catch (error) {
+        console.log('[SW] Cache lookup strategy failed:', error.message);
+      }
     }
     
-    if (!cachedResponse) {
-      cachedResponse = await cache.match(new Request(request.url));
-    }
-    
-    if (cachedResponse) {
-      console.log('[SW] ✅ Serving media from cache:', request.url);
-      return cachedResponse;
-    }
-    
-    // If not found in cache, check IndexedDB for large files and XR videos
-    console.log('[SW] Not found in cache, checking IndexedDB for:', request.url);
+    // Check IndexedDB for large files
     const largeFileResponse = await getLargeFile(request.url);
     if (largeFileResponse) {
-      console.log('[SW] ✅ Serving media from IndexedDB:', request.url);
+      console.log('[SW] ✅ Serving from IndexedDB:', request.url);
       return largeFileResponse;
     }
     
-    console.log('[SW] ❌ Not in cache, fetching from network:', request.url);
+    console.log('[SW] Not in cache, fetching from network:', request.url);
     
-    // Network fetch with simplified strategy
-    let networkResponse;
-    const FETCH_TIMEOUT = isXRVideo ? 30000 : 15000; // Reduced timeouts
+    // Simplified network fetch
+    const networkResponse = await fetch(request);
     
-    const fetchWithTimeout = async (fetchFunction) => {
-      return Promise.race([
-        fetchFunction(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT)
-        )
-      ]);
-    };
-    
-    try {
-      // First attempt: Use appropriate mode for device
-      const fetchMode = isIOS ? 'no-cors' : 'cors';
-      console.log('[SW] Network fetch with', fetchMode, 'mode for', request.url);
-      
-      networkResponse = await fetchWithTimeout(() => fetch(new Request(request.url, {
-        mode: fetchMode,
-        credentials: 'omit',
-        cache: 'no-cache'
-      })));
-      
-      if (networkResponse.ok || networkResponse.type === 'opaque') {
-        console.log('[SW] ✅ Network fetch successful:', request.url);
-      } else {
-        throw new Error('Response not ok');
-      }
-    } catch (firstError) {
-      console.log('[SW] First network fetch failed, trying alternative mode:', firstError.message);
-      
-      // Second attempt: Try alternative mode
-      const altMode = isIOS ? 'cors' : 'no-cors';
-      networkResponse = await fetchWithTimeout(() => fetch(new Request(request.url, {
-        mode: altMode,
-        credentials: 'omit',
-        cache: 'no-cache'
-      })));
-      
-      if (!networkResponse.ok && networkResponse.type !== 'opaque') {
-        throw new Error('Both network fetch attempts failed');
-      }
-    }
-    
-    console.log('[SW] Network response status:', networkResponse.status, 'type:', networkResponse.type, 'for:', request.url);
-    
-    // Cache the response for future use
     if (networkResponse.ok || networkResponse.type === 'opaque') {
+      console.log('[SW] ✅ Network fetch successful:', request.url);
+      
+      // Cache for future use
       try {
-        // Try Cache API first
-        const cacheRequest = new Request(request.url);
-        await cache.put(cacheRequest, networkResponse.clone());
+        await cache.put(new Request(request.url), networkResponse.clone());
         console.log('[SW] ✅ Cached for future use:', request.url);
       } catch (cacheError) {
-        console.log('[SW] Cache API failed, trying IndexedDB:', cacheError.message);
-        
-        // IndexedDB fallback
+        console.log('[SW] Caching failed, trying IndexedDB:', cacheError.message);
         try {
           await storeLargeFile(request.url, networkResponse.clone());
-          console.log('[SW] ✅ Stored in IndexedDB for future use:', request.url);
-        } catch (indexedDBError) {
-          console.log('[SW] Storage failed for', request.url, 'Error:', indexedDBError.message);
+          console.log('[SW] ✅ Stored in IndexedDB:', request.url);
+        } catch (dbError) {
+          console.log('[SW] IndexedDB storage failed:', dbError.message);
         }
       }
+      
+      return networkResponse;
+    } else {
+      throw new Error(`Network response not ok: ${networkResponse.status}`);
     }
-    
-    return networkResponse;
   } catch (error) {
-    console.error('[SW] ❌ Error handling media request:', error);
-    console.error('[SW] Error details:', {
-      url: request.url,
-      error: error.message
-    });
+    console.error('[SW] Error handling media request:', error);
     
-    // Enhanced fallback cache check
+    // Final fallback attempt
     try {
       const cache = await caches.open(MEDIA_CACHE);
+      const fallbackResponse = await cache.match(request.url) || await getLargeFile(request.url);
       
-      // Try all cache lookup strategies as fallback
-      const fallbackStrategies = [
-        () => cache.match(request.url),
-        () => cache.match(request),
-        () => cache.match(new Request(request.url))
-      ];
-      
-      for (const strategy of fallbackStrategies) {
-        try {
-          const fallbackResponse = await strategy();
-          if (fallbackResponse) {
-            console.log('[SW] ✅ Serving from cache as error fallback:', request.url);
-            return fallbackResponse;
-          }
-        } catch (fallbackError) {
-          console.log('[SW] Fallback cache lookup failed:', fallbackError.message);
-        }
-      }
-      
-      // Also try IndexedDB as fallback
-      const largeFileFallback = await getLargeFile(request.url);
-      if (largeFileFallback) {
-        console.log('[SW] ✅ Serving from IndexedDB as error fallback:', request.url);
-        return largeFileFallback;
+      if (fallbackResponse) {
+        console.log('[SW] ✅ Serving from fallback cache:', request.url);
+        return fallbackResponse;
       }
     } catch (fallbackError) {
-      console.error('[SW] ❌ Fallback cache check also failed:', fallbackError);
+      console.error('[SW] Fallback failed:', fallbackError);
     }
     
-    // For XR videos, return a more specific error
     if (isXRVideo) {
       console.error('[SW] ❌ XR video not available offline:', request.url);
-      return new Response('XR video not available offline. Please download content first.', { 
-        status: 503,
-        statusText: 'XR video not cached'
-      });
+      return new Response('XR video not available offline', { status: 503 });
     }
     
-    return new Response('Media not available offline. Please download content first.', { 
-      status: 503,
-      statusText: 'Media not cached'
-    });
+    return new Response('Media not available offline', { status: 503 });
   }
 }
 
@@ -810,4 +731,4 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.openWindow('/')
   );
-}); 
+});
