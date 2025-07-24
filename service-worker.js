@@ -268,53 +268,52 @@ async function cacheMediaFiles(urls) {
     try {
       console.log('[SW] Caching', url, isXRVideo ? '(XR Video)' : '');
       
-      // Much shorter timeout to prevent hanging - move on quickly if a file is problematic
-      const FETCH_TIMEOUT = isXRVideo ? 15000 : 8000; // 15s for XR videos, 8s for others
+      // Reduced timeout to prevent freezing
+      const FETCH_TIMEOUT = isXRVideo ? 30000 : 15000; // 30s for XR videos, 15s for others
       
-      let response;
-      let cacheSuccess = false;
-      
-      // Single simplified fetch attempt to prevent hanging
-      try {
-        console.log('[SW] Fetching:', url);
-        
-        response = await Promise.race([
-          fetch(new Request(url, {
-            mode: 'no-cors',
-            credentials: 'omit',
-            cache: 'no-cache'
-          })),
+      const fetchWithTimeout = async (fetchFunction) => {
+        return Promise.race([
+          fetchFunction(),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT)
           )
         ]);
+      };
+
+      let response;
+      let cacheSuccess = false;
+      
+      // Simplified fetch strategy - just two attempts
+      try {
+        // First attempt: Use appropriate mode for device
+        const fetchMode = isIOS ? 'no-cors' : 'cors';
+        console.log('[SW] Fetching with', fetchMode, 'mode for', url);
+        
+        response = await fetchWithTimeout(() => fetch(new Request(url, {
+          mode: fetchMode,
+          credentials: 'omit',
+          cache: 'no-cache'
+        })));
         
         if (response.ok || response.type === 'opaque') {
           console.log('[SW] ✅ Fetch successful:', url);
         } else {
           throw new Error('Response not ok');
         }
-      } catch (fetchError) {
-        console.log('[SW] ⚠️ Fetch failed for', url, '- skipping:', fetchError.message);
-        // Don't fail the entire download, just skip this file and continue
-        results.push({ url, status: 'failed', error: fetchError.message });
-        failedCount++;
+      } catch (firstError) {
+        console.log('[SW] First fetch failed, trying alternative mode:', firstError.message);
         
-        // Send progress update and continue with next file
-        self.clients.matchAll().then(clients => {
-          clients.forEach(client => {
-            client.postMessage({
-              type: 'CACHE_PROGRESS',
-              results: results.slice(),
-              total: urls.length,
-              successCount,
-              failedCount,
-              completedCount: successCount + failedCount,
-              currentFile: i + 1
-            });
-          });
-        });
-        continue; // Skip to next file
+        // Second attempt: Try alternative mode
+        const altMode = isIOS ? 'cors' : 'no-cors';
+        response = await fetchWithTimeout(() => fetch(new Request(url, {
+          mode: altMode,
+          credentials: 'omit',
+          cache: 'no-cache'
+        })));
+        
+        if (!response.ok && response.type !== 'opaque') {
+          throw new Error('Both fetch attempts failed');
+        }
       }
       
       // Storage strategy: Cache API first, IndexedDB fallback
