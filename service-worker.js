@@ -236,18 +236,61 @@ async function hasLargeFile(url) {
   }
 }
 
+// Enhanced XR video quality selection
+function selectOptimalXRQuality(xrUrl) {
+  const lowerUrl = xrUrl.toLowerCase();
+  
+  // Simple device/connection detection in service worker context
+  const userAgent = self.navigator.userAgent;
+  const isHighEndDevice = userAgent.includes('Chrome') && !userAgent.includes('Mobile');
+  const isMobile = /iPad|iPhone|iPod|Android/i.test(userAgent);
+  
+  console.log('[SW] XR Quality Selection:', {
+    originalUrl: xrUrl,
+    isHighEndDevice,
+    isMobile,
+    userAgent: userAgent.substring(0, 100)
+  });
+  
+  const qualityVariants = [];
+  
+  // Extract base URL pattern and generate variants
+  if (lowerUrl.includes('-low-') || lowerUrl.includes('-med-') || lowerUrl.includes('-high-')) {
+    const baseUrl = xrUrl.replace(/-(?:low|med|high)-/i, '-{quality}-');
+    
+    // Add variants based on device capability (mobile gets lower quality first)
+    if (isMobile) {
+      qualityVariants.push(baseUrl.replace('{quality}', 'LOW'));
+      qualityVariants.push(baseUrl.replace('{quality}', 'MED'));
+    } else if (isHighEndDevice) {
+      qualityVariants.push(baseUrl.replace('{quality}', 'MED'));
+      qualityVariants.push(baseUrl.replace('{quality}', 'HIGH'));
+      qualityVariants.push(baseUrl.replace('{quality}', 'LOW'));
+    } else {
+      qualityVariants.push(baseUrl.replace('{quality}', 'MED'));
+      qualityVariants.push(baseUrl.replace('{quality}', 'LOW'));
+    }
+  } else {
+    // If no quality indicators, use original
+    qualityVariants.push(xrUrl);
+  }
+  
+  console.log('[SW] Generated quality variants:', qualityVariants);
+  return qualityVariants;
+}
+
 // Cache media files (used by download feature)
 async function cacheMediaFiles(urls) {
   const cache = await caches.open(MEDIA_CACHE);
   console.log('[SW] Starting to cache', urls.length, 'files');
   
-  // Fix XR video detection - use consistent case-insensitive matching
+  // Enhanced XR video detection
   const xrVideos = urls.filter(url => {
     const lowerUrl = url.toLowerCase();
     return lowerUrl.includes('xr-chapters') || lowerUrl.includes('xr_scene') || lowerUrl.includes('xr-src');
   });
   if (xrVideos.length > 0) {
-    console.log('[SW] XR videos to cache:', xrVideos.length, xrVideos);
+    console.log('[SW] XR videos to cache:', xrVideos);
   }
   
   const results = [];
@@ -257,9 +300,8 @@ async function cacheMediaFiles(urls) {
   // Simple device detection
   const userAgent = self.navigator.userAgent;
   const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-  const isAndroid = /Android/.test(userAgent);
   
-  console.log('[SW] Device info:', { isIOS, isAndroid, userAgent: userAgent.substring(0, 100) });
+  console.log('[SW] Device info:', { isIOS, userAgent: userAgent.substring(0, 100) });
 
   // Process files sequentially to provide real-time progress updates
   for (let i = 0; i < urls.length; i++) {
@@ -267,66 +309,87 @@ async function cacheMediaFiles(urls) {
     const isXRVideo = xrVideos.includes(url);
     
     try {
-      console.log('[SW] Caching', url, isXRVideo ? '(XR Video)' : '');
+      console.log('[SW] Processing', url, isXRVideo ? '(XR Video)' : '');
       
-      // Enhanced timeout for XR videos, especially on Android
-      const FETCH_TIMEOUT = isXRVideo ? (isAndroid ? 120000 : 60000) : 30000; // 2min for Android XR, 1min for others
-      
-      const fetchWithTimeout = async (fetchFunction) => {
-        return Promise.race([
-          fetchFunction(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT)
-          )
-        ]);
-      };
-
       let response;
       let cacheSuccess = false;
       
-      // Enhanced fetch strategy for XR videos
-      try {
-        if (isXRVideo) {
-          // For XR videos, try CORS first with video headers
-          console.log('[SW] 🎬 Fetching XR video with extended timeout:', url);
-          response = await fetchWithTimeout(() => fetch(new Request(url, {
-            mode: 'cors',
-            credentials: 'omit',
-            cache: 'no-cache',
-            headers: {
-              'Accept': 'video/mp4,video/*,*/*'
+      if (isXRVideo) {
+        // Enhanced XR video handling with adaptive quality
+        console.log('[SW] Processing XR video with adaptive quality selection');
+        const qualityVariants = selectOptimalXRQuality(url);
+        
+        // Try each quality variant until one works
+        for (const [index, variantUrl] of qualityVariants.entries()) {
+          try {
+            console.log(`[SW] Attempting XR quality variant ${index + 1}/${qualityVariants.length}:`, variantUrl);
+            
+            response = await fetch(variantUrl, {
+              credentials: 'omit',
+              cache: 'no-cache'
+            });
+            
+            if (response.ok || response.type === 'opaque') {
+              console.log('[SW] ✅ XR video fetch successful:', variantUrl);
+              break;
+            } else {
+              throw new Error(`Response not ok: ${response.status}`);
             }
-          })));
-        } else {
-          // Regular fetch for other media
+          } catch (variantError) {
+            console.log(`[SW] XR quality variant ${index + 1} failed:`, variantError.message);
+            if (index === qualityVariants.length - 1) {
+              throw new Error('All XR quality variants failed');
+            }
+          }
+        }
+      } else {
+        // Standard handling for audio and images
+        const FETCH_TIMEOUT = 15000; // 15s for non-XR files
+        
+        const fetchWithTimeout = async (fetchFunction) => {
+          return Promise.race([
+            fetchFunction(),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT)
+            )
+          ]);
+        };
+
+        // Simplified fetch strategy for non-XR files
+        try {
+          // First attempt: Use appropriate mode for device
+          const fetchMode = isIOS ? 'no-cors' : 'cors';
+          console.log('[SW] Fetching with', fetchMode, 'mode for', url);
+          
           response = await fetchWithTimeout(() => fetch(new Request(url, {
-            mode: 'cors',
+            mode: fetchMode,
             credentials: 'omit',
             cache: 'no-cache'
           })));
-        }
-        
-        if (response.ok || response.type === 'opaque') {
-          console.log('[SW] ✅ Fetch successful:', url);
-        } else {
-          throw new Error(`Response not ok: ${response.status}`);
-        }
-      } catch (firstError) {
-        console.log('[SW] First fetch failed, trying no-cors mode:', firstError.message);
-        
-        // Fallback to no-cors
-        response = await fetchWithTimeout(() => fetch(new Request(url, {
-          mode: 'no-cors',
-          credentials: 'omit',
-          cache: 'no-cache'
-        })));
-        
-        if (!response.ok && response.type !== 'opaque') {
-          throw new Error('Both fetch attempts failed');
+          
+          if (response.ok || response.type === 'opaque') {
+            console.log('[SW] ✅ Fetch successful:', url);
+          } else {
+            throw new Error('Response not ok');
+          }
+        } catch (firstError) {
+          console.log('[SW] First fetch failed, trying alternative mode:', firstError.message);
+          
+          // Second attempt: Try alternative mode
+          const altMode = isIOS ? 'cors' : 'no-cors';
+          response = await fetchWithTimeout(() => fetch(new Request(url, {
+            mode: altMode,
+            credentials: 'omit',
+            cache: 'no-cache'
+          })));
+          
+          if (!response.ok && response.type !== 'opaque') {
+            throw new Error('Both fetch attempts failed');
+          }
         }
       }
       
-      // Storage strategy: Always use IndexedDB for XR videos
+      // Storage strategy: Cache API first, IndexedDB fallback
       const contentLength = response.headers.get('content-length');
       const fileSize = contentLength ? parseInt(contentLength, 10) : 0;
       const isLargeFile = fileSize > LARGE_FILE_THRESHOLD;
@@ -339,43 +402,27 @@ async function cacheMediaFiles(urls) {
         isXRVideo: isXRVideo
       });
       
-      if (isXRVideo || isLargeFile) {
-        // Force IndexedDB for XR videos and large files
+      // Try Cache API first for all files
+      try {
+        const cacheRequest = new Request(url);
+        await cache.put(cacheRequest, response.clone());
+        console.log('[SW] ✅ Cached in Cache API:', url);
+        results.push({ url, status: 'success', storage: 'cache' });
+        successCount++;
+        cacheSuccess = true;
+      } catch (cacheError) {
+        console.log('[SW] Cache API failed for', url, 'Error:', cacheError.message);
+        
+        // IndexedDB fallback for large files or when Cache API fails
         try {
-          console.log(`[SW] 📀 Storing ${isXRVideo ? 'XR video' : 'large file'} in IndexedDB:`, url);
+          console.log('[SW] Trying IndexedDB for', url);
           await storeLargeFile(url, response.clone());
-          console.log(`[SW] ✅ Successfully stored ${isXRVideo ? 'XR video' : 'large file'} in IndexedDB:`, url);
-          results.push({ url, status: 'success', storage: 'indexeddb', isXRVideo });
+          console.log('[SW] ✅ Stored in IndexedDB:', url);
+          results.push({ url, status: 'success', storage: 'indexeddb' });
           successCount++;
           cacheSuccess = true;
         } catch (indexedDBError) {
-          console.log('[SW] ❌ IndexedDB storage failed for', url, 'Error:', indexedDBError);
-        }
-      }
-      
-      if (!cacheSuccess) {
-        // Try Cache API for smaller files
-        try {
-          const cacheRequest = new Request(url);
-          await cache.put(cacheRequest, response.clone());
-          console.log('[SW] ✅ Cached in Cache API:', url);
-          results.push({ url, status: 'success', storage: 'cache' });
-          successCount++;
-          cacheSuccess = true;
-        } catch (cacheError) {
-          console.log('[SW] Cache API failed for', url, 'Error:', cacheError.message);
-          
-          // IndexedDB fallback
-          try {
-            console.log('[SW] 🔄 Trying IndexedDB fallback for', url);
-            await storeLargeFile(url, response.clone());
-            console.log('[SW] ✅ IndexedDB fallback succeeded for', url);
-            results.push({ url, status: 'success', storage: 'indexeddb-fallback' });
-            successCount++;
-            cacheSuccess = true;
-          } catch (indexedDBError) {
-            console.log('[SW] ❌ IndexedDB fallback also failed for', url, 'Error:', indexedDBError.message);
-          }
+          console.log('[SW] IndexedDB also failed for', url, 'Error:', indexedDBError.message);
         }
       }
       
@@ -413,8 +460,7 @@ async function cacheMediaFiles(urls) {
   // Log XR video results specifically
   const xrResults = results.filter(r => xrVideos.includes(r.url));
   if (xrResults.length > 0) {
-    console.log('[SW] 🎬 XR video caching results:', xrResults);
-    console.log('[SW] 🎬 XR videos stored in IndexedDB:', xrResults.filter(r => r.storage.includes('indexeddb')).length);
+    console.log('[SW] XR video caching results:', xrResults);
   }
   
   // Send final completion message
@@ -439,60 +485,24 @@ async function getCacheStatus(urls) {
   for (const url of urls) {
     let isCached = false;
     
-    // Check if this is an XR video
-    const lowerUrl = url.toLowerCase();
-    const isXRVideo = lowerUrl.includes('xr-chapters') || lowerUrl.includes('xr_scene') || lowerUrl.includes('xr-src');
+    // Check Cache API first
+    const req = new Request(url, {
+      mode: 'cors',
+      credentials: 'omit'
+    });
+    const response = await cache.match(req);
     
-    if (isXRVideo) {
-      // For XR videos, check IndexedDB first
-      console.log('[SW] 🎬 Checking XR video cache status in IndexedDB:', url);
+    if (response) {
+      isCached = true;
+    } else {
+      // Check IndexedDB for large files
       const hasLargeFileStored = await hasLargeFile(url);
       if (hasLargeFileStored) {
-        console.log('[SW] ✅ 🎬 XR video found in IndexedDB:', url);
         isCached = true;
-      } else {
-        console.log('[SW] ❌ 🎬 XR video not found in IndexedDB:', url);
-        // Also check Cache API as fallback
-        const response = await cache.match(new Request(url, {
-          mode: 'cors',
-          credentials: 'omit'
-        }));
-        if (response) {
-          console.log('[SW] ✅ 🎬 XR video found in Cache API (fallback):', url);
-          isCached = true;
-        }
-      }
-    } else {
-      // For other media, check Cache API first
-      const req = new Request(url, {
-        mode: 'cors',
-        credentials: 'omit'
-      });
-      const response = await cache.match(req);
-      
-      if (response) {
-        isCached = true;
-      } else {
-        // Check IndexedDB for large files
-        const hasLargeFileStored = await hasLargeFile(url);
-        if (hasLargeFileStored) {
-          isCached = true;
-        }
       }
     }
     
     status[url] = isCached;
-  }
-  
-  // Log XR video status summary
-  const xrVideoUrls = Object.keys(status).filter(url => {
-    const lowerUrl = url.toLowerCase();
-    return lowerUrl.includes('xr-chapters') || lowerUrl.includes('xr_scene') || lowerUrl.includes('xr-src');
-  });
-  
-  if (xrVideoUrls.length > 0) {
-    const cachedXRVideos = xrVideoUrls.filter(url => status[url]).length;
-    console.log(`[SW] 🎬 XR video cache status: ${cachedXRVideos}/${xrVideoUrls.length} cached`);
   }
   
   return status;
@@ -578,18 +588,6 @@ async function handleMediaRequest(request) {
   console.log('[SW] Processing media request:', { url: request.url, isXRVideo });
   
   try {
-    // For XR videos, check IndexedDB FIRST as they're most likely stored there
-    if (isXRVideo) {
-      console.log('[SW] 🎬 XR video request - checking IndexedDB first:', request.url);
-      const largeFileResponse = await getLargeFile(request.url);
-      if (largeFileResponse) {
-        console.log('[SW] ✅ 🎬 Serving XR video from IndexedDB:', request.url);
-        return largeFileResponse;
-      } else {
-        console.log('[SW] ⚠️ 🎬 XR video not found in IndexedDB:', request.url);
-      }
-    }
-    
     const cache = await caches.open(MEDIA_CACHE);
     
     // Enhanced cache lookup with multiple strategies
@@ -612,99 +610,93 @@ async function handleMediaRequest(request) {
       }
     }
     
-    // For non-XR videos, check IndexedDB as secondary option
-    if (!isXRVideo) {
-      const largeFileResponse = await getLargeFile(request.url);
-      if (largeFileResponse) {
-        console.log('[SW] ✅ Serving from IndexedDB:', request.url);
-        return largeFileResponse;
-      }
+    // Check IndexedDB for large files
+    const largeFileResponse = await getLargeFile(request.url);
+    if (largeFileResponse) {
+      console.log('[SW] ✅ Serving from IndexedDB:', request.url);
+      return largeFileResponse;
     }
     
-    console.log('[SW] ❌ Not in cache, fetching from network:', request.url);
+    console.log('[SW] Not in cache, fetching from network:', request.url);
     
-    // Network fetch - simplified for better reliability
     let networkResponse;
     
-    try {
-      if (isXRVideo) {
-        // For XR videos, try with video headers
-        console.log('[SW] 🎬 Fetching XR video from network:', request.url);
-        networkResponse = await fetch(new Request(request.url, {
-          method: 'GET',
-          headers: {
-            'Accept': 'video/mp4,video/*,*/*'
-          }
-        }));
-      } else {
-        networkResponse = await fetch(request);
-      }
+    // Enhanced network fetch with adaptive quality for XR videos
+    if (isXRVideo) {
+      console.log('[SW] XR video network fetch with adaptive quality');
+      const qualityVariants = selectOptimalXRQuality(request.url);
       
-      if (networkResponse.ok || networkResponse.type === 'opaque') {
-        console.log('[SW] ✅ Network fetch successful:', request.url);
-        
-        // Cache for future use with proper storage method
+      // Try each quality variant until one works
+      for (const [index, variantUrl] of qualityVariants.entries()) {
         try {
-          if (isXRVideo) {
-            // Always store XR videos in IndexedDB
-            console.log('[SW] 🎬 Storing fetched XR video in IndexedDB:', request.url);
-            await storeLargeFile(request.url, networkResponse.clone());
-            console.log('[SW] ✅ 🎬 XR video stored in IndexedDB for future use:', request.url);
+          console.log(`[SW] Trying XR quality variant ${index + 1}/${qualityVariants.length}:`, variantUrl);
+          
+          networkResponse = await fetch(variantUrl, {
+            credentials: 'omit',
+            cache: 'no-cache'
+          });
+          
+          if (networkResponse.ok || networkResponse.type === 'opaque') {
+            console.log('[SW] ✅ XR video network fetch successful:', variantUrl);
+            break;
           } else {
-            // Try Cache API first for other media
-            try {
-              await cache.put(new Request(request.url), networkResponse.clone());
-              console.log('[SW] ✅ Cached for future use:', request.url);
-            } catch (cacheError) {
-              console.log('[SW] Cache API failed, trying IndexedDB:', cacheError.message);
-              await storeLargeFile(request.url, networkResponse.clone());
-              console.log('[SW] ✅ Stored in IndexedDB:', request.url);
+            console.log(`[SW] XR variant ${index + 1} failed with status:`, networkResponse.status);
+            if (index === qualityVariants.length - 1) {
+              throw new Error('All XR quality variants failed');
             }
           }
-        } catch (storageError) {
-          console.log('[SW] ⚠️ Storage failed for future use:', storageError.message);
+        } catch (variantError) {
+          console.log(`[SW] XR variant ${index + 1} error:`, variantError.message);
+          if (index === qualityVariants.length - 1) {
+            throw new Error('All XR quality variants failed');
+          }
         }
-        
-        return networkResponse;
-      } else {
-        throw new Error(`Network response not ok: ${networkResponse.status}`);
       }
-    } catch (networkError) {
-      console.log('[SW] ❌ Network fetch failed:', networkError.message);
-      throw networkError;
+    } else {
+      // Standard network fetch for non-XR files
+      networkResponse = await fetch(request);
+    }
+    
+    if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
+      console.log('[SW] ✅ Network fetch successful:', request.url);
+      
+      // Cache for future use
+      try {
+        await cache.put(new Request(request.url), networkResponse.clone());
+        console.log('[SW] ✅ Cached for future use:', request.url);
+      } catch (cacheError) {
+        console.log('[SW] Caching failed, trying IndexedDB:', cacheError.message);
+        try {
+          await storeLargeFile(request.url, networkResponse.clone());
+          console.log('[SW] ✅ Stored in IndexedDB:', request.url);
+        } catch (dbError) {
+          console.log('[SW] IndexedDB storage failed:', dbError.message);
+        }
+      }
+      
+      return networkResponse;
+    } else {
+      throw new Error(`Network response not ok: ${networkResponse?.status || 'unknown'}`);
     }
   } catch (error) {
-    console.error('[SW] ❌ Error handling media request:', error);
+    console.error('[SW] Error handling media request:', error);
     
-    // Enhanced fallback attempt with detailed logging
+    // Final fallback attempt
     try {
-      console.log('[SW] 🔄 Attempting fallback retrieval for:', request.url);
-      
       const cache = await caches.open(MEDIA_CACHE);
-      const fallbackResponse = await cache.match(request.url);
+      const fallbackResponse = await cache.match(request.url) || await getLargeFile(request.url);
       
       if (fallbackResponse) {
         console.log('[SW] ✅ Serving from fallback cache:', request.url);
         return fallbackResponse;
       }
-      
-      const fallbackIndexedDBResponse = await getLargeFile(request.url);
-      if (fallbackIndexedDBResponse) {
-        console.log('[SW] ✅ Serving from fallback IndexedDB:', request.url);
-        return fallbackIndexedDBResponse;
-      }
-      
-      console.log('[SW] ❌ No fallback found for:', request.url);
     } catch (fallbackError) {
-      console.error('[SW] ❌ Fallback failed:', fallbackError);
+      console.error('[SW] Fallback failed:', fallbackError);
     }
     
     if (isXRVideo) {
-      console.error('[SW] ❌ 🎬 XR video not available offline:', request.url);
-      return new Response('XR video not available offline. Please ensure content is downloaded.', { 
-        status: 503,
-        statusText: 'XR video not cached'
-      });
+      console.error('[SW] ❌ XR video not available offline:', request.url);
+      return new Response('XR video not available offline', { status: 503 });
     }
     
     return new Response('Media not available offline', { status: 503 });
