@@ -236,55 +236,12 @@ async function hasLargeFile(url) {
   }
 }
 
-// Enhanced XR video quality selection
-function selectOptimalXRQuality(xrUrl) {
-  const lowerUrl = xrUrl.toLowerCase();
-  
-  // Simple device/connection detection in service worker context
-  const userAgent = self.navigator.userAgent;
-  const isHighEndDevice = userAgent.includes('Chrome') && !userAgent.includes('Mobile');
-  const isMobile = /iPad|iPhone|iPod|Android/i.test(userAgent);
-  
-  console.log('[SW] XR Quality Selection:', {
-    originalUrl: xrUrl,
-    isHighEndDevice,
-    isMobile,
-    userAgent: userAgent.substring(0, 100)
-  });
-  
-  const qualityVariants = [];
-  
-  // Extract base URL pattern and generate variants
-  if (lowerUrl.includes('-low-') || lowerUrl.includes('-med-') || lowerUrl.includes('-high-')) {
-    const baseUrl = xrUrl.replace(/-(?:low|med|high)-/i, '-{quality}-');
-    
-    // Add variants based on device capability (mobile gets lower quality first)
-    if (isMobile) {
-      qualityVariants.push(baseUrl.replace('{quality}', 'LOW'));
-      qualityVariants.push(baseUrl.replace('{quality}', 'MED'));
-    } else if (isHighEndDevice) {
-      qualityVariants.push(baseUrl.replace('{quality}', 'MED'));
-      qualityVariants.push(baseUrl.replace('{quality}', 'HIGH'));
-      qualityVariants.push(baseUrl.replace('{quality}', 'LOW'));
-    } else {
-      qualityVariants.push(baseUrl.replace('{quality}', 'MED'));
-      qualityVariants.push(baseUrl.replace('{quality}', 'LOW'));
-    }
-  } else {
-    // If no quality indicators, use original
-    qualityVariants.push(xrUrl);
-  }
-  
-  console.log('[SW] Generated quality variants:', qualityVariants);
-  return qualityVariants;
-}
-
 // Cache media files (used by download feature)
 async function cacheMediaFiles(urls) {
   const cache = await caches.open(MEDIA_CACHE);
   console.log('[SW] Starting to cache', urls.length, 'files');
   
-  // Enhanced XR video detection
+  // Fix XR video detection - use consistent case-insensitive matching
   const xrVideos = urls.filter(url => {
     const lowerUrl = url.toLowerCase();
     return lowerUrl.includes('xr-chapters') || lowerUrl.includes('xr_scene') || lowerUrl.includes('xr-src');
@@ -309,83 +266,53 @@ async function cacheMediaFiles(urls) {
     const isXRVideo = xrVideos.includes(url);
     
     try {
-      console.log('[SW] Processing', url, isXRVideo ? '(XR Video)' : '');
+      console.log('[SW] Caching', url, isXRVideo ? '(XR Video)' : '');
       
+      // Reduced timeout to prevent freezing
+      const FETCH_TIMEOUT = isXRVideo ? 30000 : 15000; // 30s for XR videos, 15s for others
+      
+      const fetchWithTimeout = async (fetchFunction) => {
+        return Promise.race([
+          fetchFunction(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT)
+          )
+        ]);
+      };
+
       let response;
       let cacheSuccess = false;
       
-      if (isXRVideo) {
-        // Enhanced XR video handling with adaptive quality
-        console.log('[SW] Processing XR video with adaptive quality selection');
-        const qualityVariants = selectOptimalXRQuality(url);
+      // Simplified fetch strategy - just two attempts
+      try {
+        // First attempt: Use appropriate mode for device
+        const fetchMode = isIOS ? 'no-cors' : 'cors';
+        console.log('[SW] Fetching with', fetchMode, 'mode for', url);
         
-        // Try each quality variant until one works
-        for (const [index, variantUrl] of qualityVariants.entries()) {
-          try {
-            console.log(`[SW] Attempting XR quality variant ${index + 1}/${qualityVariants.length}:`, variantUrl);
-            
-            response = await fetch(variantUrl, {
-              credentials: 'omit',
-              cache: 'no-cache'
-            });
-            
-            if (response.ok || response.type === 'opaque') {
-              console.log('[SW] ✅ XR video fetch successful:', variantUrl);
-              break;
-            } else {
-              throw new Error(`Response not ok: ${response.status}`);
-            }
-          } catch (variantError) {
-            console.log(`[SW] XR quality variant ${index + 1} failed:`, variantError.message);
-            if (index === qualityVariants.length - 1) {
-              throw new Error('All XR quality variants failed');
-            }
-          }
+        response = await fetchWithTimeout(() => fetch(new Request(url, {
+          mode: fetchMode,
+          credentials: 'omit',
+          cache: 'no-cache'
+        })));
+        
+        if (response.ok || response.type === 'opaque') {
+          console.log('[SW] ✅ Fetch successful:', url);
+        } else {
+          throw new Error('Response not ok');
         }
-      } else {
-        // Standard handling for audio and images
-        const FETCH_TIMEOUT = 15000; // 15s for non-XR files
+      } catch (firstError) {
+        console.log('[SW] First fetch failed, trying alternative mode:', firstError.message);
         
-        const fetchWithTimeout = async (fetchFunction) => {
-          return Promise.race([
-            fetchFunction(),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Fetch timeout')), FETCH_TIMEOUT)
-            )
-          ]);
-        };
-
-        // Simplified fetch strategy for non-XR files
-        try {
-          // First attempt: Use appropriate mode for device
-          const fetchMode = isIOS ? 'no-cors' : 'cors';
-          console.log('[SW] Fetching with', fetchMode, 'mode for', url);
-          
-          response = await fetchWithTimeout(() => fetch(new Request(url, {
-            mode: fetchMode,
-            credentials: 'omit',
-            cache: 'no-cache'
-          })));
-          
-          if (response.ok || response.type === 'opaque') {
-            console.log('[SW] ✅ Fetch successful:', url);
-          } else {
-            throw new Error('Response not ok');
-          }
-        } catch (firstError) {
-          console.log('[SW] First fetch failed, trying alternative mode:', firstError.message);
-          
-          // Second attempt: Try alternative mode
-          const altMode = isIOS ? 'cors' : 'no-cors';
-          response = await fetchWithTimeout(() => fetch(new Request(url, {
-            mode: altMode,
-            credentials: 'omit',
-            cache: 'no-cache'
-          })));
-          
-          if (!response.ok && response.type !== 'opaque') {
-            throw new Error('Both fetch attempts failed');
-          }
+        // Second attempt: Try alternative mode
+        const altMode = isIOS ? 'cors' : 'no-cors';
+        response = await fetchWithTimeout(() => fetch(new Request(url, {
+          mode: altMode,
+          credentials: 'omit',
+          cache: 'no-cache'
+        })));
+        
+        if (!response.ok && response.type !== 'opaque') {
+          throw new Error('Both fetch attempts failed');
         }
       }
       
@@ -619,45 +546,10 @@ async function handleMediaRequest(request) {
     
     console.log('[SW] Not in cache, fetching from network:', request.url);
     
-    let networkResponse;
+    // Simplified network fetch
+    const networkResponse = await fetch(request);
     
-    // Enhanced network fetch with adaptive quality for XR videos
-    if (isXRVideo) {
-      console.log('[SW] XR video network fetch with adaptive quality');
-      const qualityVariants = selectOptimalXRQuality(request.url);
-      
-      // Try each quality variant until one works
-      for (const [index, variantUrl] of qualityVariants.entries()) {
-        try {
-          console.log(`[SW] Trying XR quality variant ${index + 1}/${qualityVariants.length}:`, variantUrl);
-          
-          networkResponse = await fetch(variantUrl, {
-            credentials: 'omit',
-            cache: 'no-cache'
-          });
-          
-          if (networkResponse.ok || networkResponse.type === 'opaque') {
-            console.log('[SW] ✅ XR video network fetch successful:', variantUrl);
-            break;
-          } else {
-            console.log(`[SW] XR variant ${index + 1} failed with status:`, networkResponse.status);
-            if (index === qualityVariants.length - 1) {
-              throw new Error('All XR quality variants failed');
-            }
-          }
-        } catch (variantError) {
-          console.log(`[SW] XR variant ${index + 1} error:`, variantError.message);
-          if (index === qualityVariants.length - 1) {
-            throw new Error('All XR quality variants failed');
-          }
-        }
-      }
-    } else {
-      // Standard network fetch for non-XR files
-      networkResponse = await fetch(request);
-    }
-    
-    if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
+    if (networkResponse.ok || networkResponse.type === 'opaque') {
       console.log('[SW] ✅ Network fetch successful:', request.url);
       
       // Cache for future use
@@ -676,7 +568,7 @@ async function handleMediaRequest(request) {
       
       return networkResponse;
     } else {
-      throw new Error(`Network response not ok: ${networkResponse?.status || 'unknown'}`);
+      throw new Error(`Network response not ok: ${networkResponse.status}`);
     }
   } catch (error) {
     console.error('[SW] Error handling media request:', error);
