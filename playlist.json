@@ -10,7 +10,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-1.jpg",
                   "playlist": "Ni de Aquí, Ni de Allá",
                   "IsAR": true,
-            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-10-Dtla-Xr-1-Low-1200.mp4",
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-1-LOW-1200.mp4",
             "duration": "1:15"
           },
           {
@@ -50,7 +50,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-5.jpg",
             "playlist": "Ni de Aquí, Ni de Allá",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-10-Dtla-Xr-5-Low-1200.mp4",
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-5-low-1200.mp4",
             "duration": "2:30"
           },
           {
@@ -80,7 +80,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-7.jpg",
             "playlist": "Ni de Aquí, Ni de Allá",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-21-Dtla-Xr-7B-Low.mp4",
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-21-DTLA-XR-7b-low.mp4",
             "duration": "1:54"
           },
           {
@@ -120,7 +120,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-11.jpg",
             "playlist": "Ni de Aquí, Ni de Allá",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-10-Dtla-Xr-11-Low-1400.mp4",
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-11-LOW-1400.mp4",
             "duration": "1:56"
           },
           {
@@ -170,7 +170,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-16.jpg",
             "playlist": "Ni de Aquí, Ni de Allá",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-10-Dtla-Xr-16-Low.mp4",
+            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-16-low.mp4",
             "duration": "0:48"
           },
           {
