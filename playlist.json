@@ -10,7 +10,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-1.jpg",
                   "playlist": "Ni de Aquí, Ni de Allá",
                   "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-1-LOW-1200.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-10-Dtla-Xr-1-Low-1200.mp4",
             "duration": "1:15"
           },
           {
@@ -50,7 +50,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-5.jpg",
             "playlist": "Ni de Aquí, Ni de Allá",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-5-low-1200.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-10-Dtla-Xr-5-Low-1200.mp4",
             "duration": "2:30"
           },
           {
@@ -80,7 +80,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-7.jpg",
             "playlist": "Ni de Aquí, Ni de Allá",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-21-DTLA-XR-7b-low.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-21-Dtla-Xr-7B-Low.mp4",
             "duration": "1:54"
           },
           {
@@ -120,7 +120,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-11.jpg",
             "playlist": "Ni de Aquí, Ni de Allá",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-11-LOW-1400.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-10-Dtla-Xr-11-Low-1400.mp4",
             "duration": "1:56"
           },
           {
@@ -170,7 +170,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-DTLA-WALKINGTOUR/2025-04-14-DTLA-ARTWORK-RESIZED/2025-03-15-DTLA-ART-CH-16.jpg",
             "playlist": "Ni de Aquí, Ni de Allá",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-DTLA-XR-CHAPTERS/2025-04-10-DTLA-XR-16-low.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/2025-04-10-Dtla-Xr-16-Low.mp4",
             "duration": "0:48"
           },
           {
@@ -256,7 +256,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-2.jpg",
             "playlist": "Look Up",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-JAPANTOWN-XR/2025-04-21-CHINATOWN-XR-UPDATE/2025-04-21-CHINATOWN-XR-2b-low.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Chinatown/2025-04-21-Chinatown-Xr-2B-Low.mp4",
             "duration": "2:04"
           },
           {
@@ -266,7 +266,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-3.jpg",
             "playlist": "Look Up",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-CHINATOWN-XR-CHAPTERS/2025-04-10-CHINATOWN-XR-3-low.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Chinatown/2025-04-10-Chinatown-Xr-3-Low.mp4",
             "duration": "1:20"
           },
           {
@@ -276,7 +276,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-4.jpg",
             "playlist": "Look Up",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-JAPANTOWN-XR/2025-04-21-CHINATOWN-XR-UPDATE/2025-04-21-CHINATOWN-XR-4A_low.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Chinatown/2025-04-21-Chinatown-Xr-4A+Low.mp4",
             "duration": "1:39"
           },
           {
@@ -306,7 +306,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-6.jpg",
             "playlist": "Look Up",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-CHINATOWN-XR-CHAPTERS/2025-04-10-CHINATOWN-XR-6-low.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Chinatown/2025-04-10-Chinatown-Xr-6-Low.mp4",
             "duration": "2:12"
           },
           {
@@ -356,7 +356,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-CHINATOWN/2025-03-25-CHINATOWN-ART/2025-03-15-CHINATOWN-ART-CH-11.jpg",
             "playlist": "Look Up",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-JAPANTOWN-XR/2025-04-21-CHINATOWN-XR-UPDATE/2025-04-21-CHINATOWN-XR-11a-low.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Chinatown/2025-04-21-Chinatown-Xr-11A-Low.mp4",
             "duration": "1:01"
           },
           {
@@ -432,7 +432,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH3b-ART.jpg",
             "playlist": "Returning to the Harlem of the West",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-01-JAPANTOWN-XR/2025-03-15-JAPANTOWN-CH-4-LOW.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Japantown/2025-03-15-Japantown-Ch-4-Low+(1).mp4",
             "duration": "1:44:00"
           },
           {
@@ -472,7 +472,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-04-14-JAPANTOWN-ART-RESIZED/2025-03-15-JAPANTOWN-CH6b-ART.jpg",
             "playlist": "Returning to the Harlem of the West",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-01-JAPANTOWN-XR/2025-03-15-JAPANTOWN-CH-8.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Japantown/2025-04-10-Japantown-Xr-8+(1).mp4",
             "duration": "2:06.00"
           },
           {
@@ -522,7 +522,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH11-ART.gif",
             "playlist": "Returning to the Harlem of the West",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-10-JAPANTOWN-XR/2025-04-21-JAPANTOWN-XR-SHORTER/2025-04-21-JAPANTOWN-XR-13A-low.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Japantown/2025-04-21-Japantown-Xr-13A-Low+(1).mp4",
             "duration": "1:00:00"
           },
           {
@@ -562,7 +562,7 @@
             "artwork_url": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-03-15-JAPANTOWN/2025-03-15-JAPANTOWN-ART/2025-03-15-JAPANTOWN-CH14-ART.jpg",
             "playlist": "Returning to the Harlem of the West",
             "IsAR": true,
-            "XR_Scene": "https://cmm-cloud-2.s3.us-west-1.amazonaws.com/WALKING+TOURS/2025-04-01-JAPANTOWN-XR/2025-03-15-JAPANTOWN-CH-16.mp4",
+            "XR_Scene": "https://cmm-cloud.s3.us-west-1.amazonaws.com/07-30-2025-COMPRESSED/Japantown/2025-03-15-Japantown-Xr-16-Low+(1).mp4",
             "duration": "2:13:00"
           },
           {
