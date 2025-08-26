@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/cmm-single-build-player/static/css/main.e7b1c2cb.css",
-    "main.js": "/cmm-single-build-player/static/js/main.bb3fa8a3.js",
+    "main.js": "/cmm-single-build-player/static/js/main.b2339b54.js",
     "static/js/453.66edf0db.chunk.js": "/cmm-single-build-player/static/js/453.66edf0db.chunk.js",
     "static/media/GothicA1-Regular.ttf": "/cmm-single-build-player/static/media/GothicA1-Regular.f8d31e6379bbc3879859.ttf",
     "static/media/GothicA1-ExtraBold.ttf": "/cmm-single-build-player/static/media/GothicA1-ExtraBold.0a6ac067f233054a04d6.ttf",
@@ -11,11 +11,11 @@
     "static/media/Figtree-Regular.ttf": "/cmm-single-build-player/static/media/Figtree-Regular.75baecc5482bc087f149.ttf",
     "index.html": "/cmm-single-build-player/index.html",
     "main.e7b1c2cb.css.map": "/cmm-single-build-player/static/css/main.e7b1c2cb.css.map",
-    "main.bb3fa8a3.js.map": "/cmm-single-build-player/static/js/main.bb3fa8a3.js.map",
+    "main.b2339b54.js.map": "/cmm-single-build-player/static/js/main.b2339b54.js.map",
     "453.66edf0db.chunk.js.map": "/cmm-single-build-player/static/js/453.66edf0db.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e7b1c2cb.css",
-    "static/js/main.bb3fa8a3.js"
+    "static/js/main.b2339b54.js"
   ]
 }
